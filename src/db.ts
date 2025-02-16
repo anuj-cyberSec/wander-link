@@ -12,8 +12,6 @@ const connectDb = async() => {
         console.log(process.env.MONGODB_URI);
         const client = await mongoose.connect(process.env.MONGODB_URI || '');
         // connect with database named wanderLink
-        
-
        
 
         console.log('Database connected');
