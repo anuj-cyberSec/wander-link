@@ -42,6 +42,24 @@ class UserController {
             return;
         }
     }
+
+    static async createUser(req: Request, res: Response) {
+        try{
+            const {name, email, password, profilePic, bio, age, gender, personality, interest} = req.body;
+            if(!name || !email || !password || !profilePic || !bio || !age || !gender || !personality || !interest){
+                res.send('Please fill all the fields');
+                return;
+            }
+            const newUser = new User({
+                name, email, password, profilePic, bio, age, gender, personality, interest});
+            await newUser.save();
+            res.send('User created successfully');
+        }
+        catch(error){
+            res.send('Error');
+            return;
+        }
+    }
 }
 
 export default UserController;

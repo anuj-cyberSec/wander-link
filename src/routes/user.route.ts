@@ -7,5 +7,5 @@ const router = express.Router();
 const userController = new UserController();
 router.post('/getUsers', UserController.getUsers);
 router.post('/createTrip', UserController.createTrip);
-
+router.post('/createUser', UserController.createUser);
 export default router;

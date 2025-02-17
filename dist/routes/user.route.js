@@ -9,4 +9,5 @@ const router = express_1.default.Router();
 const userController = new user_controller_1.default();
 router.post('/getUsers', user_controller_1.default.getUsers);
 router.post('/createTrip', user_controller_1.default.createTrip);
+router.post('/createUser', user_controller_1.default.createUser);
 exports.default = router;

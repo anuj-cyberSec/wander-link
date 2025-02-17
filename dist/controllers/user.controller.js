@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const user_model_1 = __importDefault(require("../models/user.model"));
 const trip_model_1 = __importDefault(require("../models/trip.model"));
 class UserController {
     static getUsers(req, res) {
@@ -49,6 +50,26 @@ class UserController {
                 yield newTrip.save();
                 res.send('Trip created successfully');
                 return;
+            }
+            catch (error) {
+                res.send('Error');
+                return;
+            }
+        });
+    }
+    static createUser(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { name, email, password, profilePic, bio, age, gender, personality, interest } = req.body;
+                if (!name || !email || !password || !profilePic || !bio || !age || !gender || !personality || !interest) {
+                    res.send('Please fill all the fields');
+                    return;
+                }
+                const newUser = new user_model_1.default({
+                    name, email, password, profilePic, bio, age, gender, personality, interest
+                });
+                yield newUser.save();
+                res.send('User created successfully');
             }
             catch (error) {
                 res.send('Error');
