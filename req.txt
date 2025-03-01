@@ -1,0 +1,6 @@
+mongoose
+passport
+express
+cors
+jsonwebtoken
+firebase-admin

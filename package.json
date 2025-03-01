@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/dotenv": "^8.2.3",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.13.4",
+    "@types/passport": "^1.0.17",
+    "@types/uuidv4": "^5.0.0",
+    "@vercel/node": "^5.1.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.0",
+    "nodemon": "^3.1.9",
+    "passport": "^0.7.0",
+    "pre-commit": "^1.2.2",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "vercel": "^41.1.4"
+  },
+  "scripts": {
+    "start": "nodemon dist/server.js",
+    "script": "tsc && git status && git add ."
+  }
+}
