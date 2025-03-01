@@ -12,11 +12,16 @@ if(!secret){
     throw new Error('JWT_SECRET is missing');
 }
 console.log(secret);
-const serviceAccount = require('../../wanderconnect-740ef-firebase-adminsdk-fbsvc-08730ac6dd.json');
+const serviceAccount = {
+    project_id : process.env.PROJECT_ID,
+    client_email : process.env.CLIENT_EMAIL,
+    private_key : process.env.PRIVATE_KEY?.replace(/\\n/g, '\n') 
 
+}
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount)
 });
+
 
 // google sign in
 

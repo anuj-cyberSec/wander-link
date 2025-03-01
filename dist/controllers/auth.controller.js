@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -23,7 +24,11 @@ if (!secret) {
     throw new Error('JWT_SECRET is missing');
 }
 console.log(secret);
-const serviceAccount = require('../../wanderconnect-740ef-firebase-adminsdk-fbsvc-08730ac6dd.json');
+const serviceAccount = {
+    project_id: process.env.PROJECT_ID,
+    client_email: process.env.CLIENT_EMAIL,
+    private_key: (_a = process.env.PRIVATE_KEY) === null || _a === void 0 ? void 0 : _a.replace(/\\n/g, '\n')
+};
 firebase_admin_1.default.initializeApp({
     credential: firebase_admin_1.default.credential.cert(serviceAccount)
 });
