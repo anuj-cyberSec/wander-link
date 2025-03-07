@@ -86,5 +86,20 @@ class UserController {
             }
         });
     }
+    static getProfile(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.user.id;
+                console.log(userId);
+                const user = yield user_model_1.default.findById(userId);
+                res.send(user);
+                return;
+            }
+            catch (error) {
+                res.send('Error');
+                return;
+            }
+        });
+    }
 }
 exports.default = UserController;

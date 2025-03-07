@@ -9,4 +9,5 @@ const userController = new UserController();
 router.post('/getUsers', authentication, UserController.getUsers);
 router.post('/createTrip', authentication, UserController.createTrip);
 router.post('/updateUser', authentication, UserController.updateUser);
+router.get('/getProfile', authentication, UserController.getProfile);
 export default router;

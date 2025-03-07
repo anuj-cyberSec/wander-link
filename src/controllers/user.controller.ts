@@ -76,6 +76,22 @@ class UserController {
             return;
         }
     }
+
+    static async getProfile(req: Request, res: Response) {
+        try {
+            
+            const userId = (req as any).user.id;
+            console.log(userId);
+            const user = await User.findById(userId);
+            res.send(user);
+            return;
+
+        }
+        catch (error) {
+            res.send('Error');
+            return;
+        }
+    }
 }
 
 export default UserController;
