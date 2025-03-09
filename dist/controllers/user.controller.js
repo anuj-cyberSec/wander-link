@@ -90,13 +90,66 @@ class UserController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const userId = req.user.id;
+                if (!userId) {
+                    res.send('Invalid userid');
+                    return;
+                }
                 console.log(userId);
                 const user = yield user_model_1.default.findById(userId);
+                if (!user) {
+                    res.send('user not found');
+                    return;
+                }
                 res.send(user);
                 return;
             }
             catch (error) {
                 res.send('Error');
+                return;
+            }
+        });
+    }
+    static updateProfile(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.send('Invalid userId');
+                    return;
+                }
+                const { name, bio, age, gender, personality, interest, profilePic, languageSpoken } = req.body;
+                const user = yield user_model_1.default.findById(userId);
+                if (!user) {
+                    res.send('user not found');
+                    return;
+                }
+                // update profile, if any field is not present, keep it as it is
+                user.name = name || user.name;
+                user.bio = bio || user.bio;
+                user.age = age || user.age;
+                user.gender = gender || user.gender;
+                user.personality = personality || user.personality;
+                user.interest = interest || user.interest;
+                user.profilePic = profilePic || user.profilePic;
+                user.languageSpoken = languageSpoken || user.languageSpoken;
+                yield user.save();
+                // user?.updateOne({
+                //     name,
+                //     bio,
+                //     age,
+                //     gender,
+                //     personality,
+                //     interest,
+                //     profilePic,
+                //     languageSpoken
+                // })
+                // user?.save();
+                res.send('profile updated');
+                return;
+            }
+            catch (error) {
+                // console.log('error is ', error);
+                res.send('Internal server error');
                 return;
             }
         });
