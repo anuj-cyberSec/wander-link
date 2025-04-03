@@ -1,63 +1,63 @@
 import mongoose,{Schema, Document}  from "mongoose";
 import {v4 as uuidv4} from 'uuid';
+
 interface IUser extends Document {
     userId: string;
     name: string;
     email: string;
-    // password: string;
-    bio: string;
-    age: number;
-    gender : string;
-    personality : string;
-    interest : [string];
-    profilePic : string;
-    location: {
-        type: string;
-        coordinates: [number];
+    auth_provider: string;
+    social_id: string;
+    bio?: string;
+    age?: number;
+    gender?: "Male" | "Female" | "Other";
+    personality?: "Introvert" | "Extrovert" | "Adventurous";
+    interest?: string[];
+    profilePic?: string;
+    location?: {
+        type: "Point";
+        coordinates: [number, number];  // [longitude, latitude]
     };
-    trips : [string];
-    // chat : [chats];
-    createdAt : Date;
-    updatedAt : Date;
-    languageSpoken: [string];
-    budget: string;
-    travelStyle : string;
+    tripIds?: Schema.Types.ObjectId[];
+    languageSpoken?: string[];
+    budget?: "Low" | "Medium" | "High";
+    travelStyle?: "Backpacking" | "Luxury" | "Solo" | "Group";
+    
+    subscriptionId?: Schema.Types.ObjectId; // Linked to Subscription Collection
+    paymentIds?: Schema.Types.ObjectId[];   // Linked to Payment Collection
+    
+    createdAt: Date;
+    updatedAt: Date;
 }
+
 const UserSchema: Schema<IUser> = new Schema({
-    userId: { type: String, default: uuidv4 },
-    name: { type: String, /*required: true*/ },
+    userId: { type: String, default: () => uuidv4() },
+    name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    // password: { type: String, required: true },
+    auth_provider: { type: String, required: true }, 
+    social_id: { type: String, required: true },
     bio: { type: String },
     age: { type: Number },
-    gender: { type: String },
-    personality: { type: String, enum: ['Introvert', 'Extrovert', 'Adventurous'] },
+    gender: { type: String, enum: ["Male", "Female", "Other"] },
+    personality: { type: String, enum: ["Introvert", "Extrovert", "Adventurous"] },
     interest: { type: [String] },
-    location: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            /*required: true*/
-        },
-        coordinates: {
-            type: [Number],
-            /*required: true*/
-        }
-    },
-    trips: { type: [String] },
     profilePic: { type: String },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
-    languageSpoken: { type: [String] },
-    budget : {
-        type: String,
-        enum: ['Low', 'Medium', 'High']
+    location: {
+        type: { type: String, enum: ["Point"] },
+        coordinates: { type: [Number], index: "2dsphere" }
     },
-    travelStyle: {
-        type: String,
-        enum: ['Backpacking', 'Luxury', 'Solo', 'Group']
-    }
+    // trips: { type: [String] },
+    tripIds: [{ type: Schema.Types.ObjectId, ref: "Trip" }],
+    languageSpoken: { type: [String] },
+    budget: { type: String, enum: ["Low", "Medium", "High"] },
+    travelStyle: { type: String, enum: ["Backpacking", "Luxury", "Solo", "Group"] },
+    
+    subscriptionId: { type: Schema.Types.ObjectId, ref: "Subscription" },
+    paymentIds: [{ type: Schema.Types.ObjectId, ref: "Payment" }],
+    
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
+
 
 const User = mongoose.model<IUser>('userData', UserSchema, 'userData');
 
