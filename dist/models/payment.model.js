@@ -35,29 +35,18 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const uuid_1 = require("uuid");
-const TripSchema = new mongoose_1.Schema({
-    tripId: { type: String, default: () => (0, uuid_1.v4)() },
-    creator: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
-    destination: { type: String, required: true, index: true },
-    travellingFrom: { type: String, required: true },
-    startDate: { type: Date, required: true, index: true },
-    endDate: { type: Date, required: true },
-    description: { type: String, maxlength: 500 },
-    participants: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User" }], // Array of user IDs
-    requests: [
-        {
-            userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
-            status: { type: String, enum: ["pending", "approved", "declined"], default: "pending" }
-        }
-    ],
-    status: { type: String, enum: ["Open", "Closed"], default: "Open" },
-    budget: { type: String, enum: ["Low", "Medium", "High"], required: true },
-    tripType: { type: String, enum: ["Backpacking", "Luxury", "Solo", "Group"], required: true },
-    visibility: { type: String, enum: ["Public", "Private"], required: true },
-    maxParticipants: { type: Number, min: 1, default: 10 }, // Default max participants to 10
+const PaymentSchema = new mongoose_1.Schema({
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
+    paymentId: { type: String, default: () => (0, uuid_1.v4)() },
+    subscriptionId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Subscription", required: true },
+    amount: { type: Number, required: true },
+    currency: { type: String, enum: ["USD", "EUR", "INR"], default: "INR" },
+    status: { type: String, enum: ["successful", "failed", "pending"], default: "pending" },
+    paymentGateway: { type: String, enum: ["stripe", "paypal", "credit_card"], required: true },
+    transactionId: { type: String, required: true },
 }, {
-    timestamps: true, // Automatically adds createdAt and updatedAt
-    collection: "tripData"
+    timestamps: true,
+    collection: "paymentData"
 });
-const Trip = mongoose_1.default.model("Trip", TripSchema);
-exports.default = Trip;
+const Payment = mongoose_1.default.model("Payment", PaymentSchema);
+exports.default = Payment;

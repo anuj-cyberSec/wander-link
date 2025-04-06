@@ -10,6 +10,7 @@ interface IPayment extends Document {
     paymentGateway: "stripe" | "paypal" | "credit_card";
     transactionId: string;
     createdAt: Date;
+    updatedAt: Date;
 }
 
 const PaymentSchema: Schema<IPayment> = new Schema({
@@ -17,14 +18,18 @@ const PaymentSchema: Schema<IPayment> = new Schema({
     paymentId: { type: String, default: () => uuidv4() },
     subscriptionId: { type: Schema.Types.ObjectId, ref: "Subscription", required: true },
     amount: { type: Number, required: true },
-    currency: { type: String, enum: ["USD", "EUR", "INR"], default: "USD" },
+    currency: { type: String, enum: ["USD", "EUR", "INR"], default: "INR" },
     status: { type: String, enum: ["successful", "failed", "pending"], default: "pending" },
     paymentGateway: { type: String, enum: ["stripe", "paypal", "credit_card"], required: true },
     transactionId: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
+},
+    {
+        timestamps: true,
+        collection: "paymentData"
+    }
+);
 
-const Payment = mongoose.model<IPayment>("Payment", PaymentSchema, "Payment");
+const Payment = mongoose.model<IPayment>("Payment", PaymentSchema);
 
 export default Payment;
 

@@ -57,9 +57,11 @@ class AuthController {
                     
                 })
                 await user.save();
+                const token = jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
+                res.send({token, user});
+                return;
             }
-            const token = jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
-            res.send({token, user});
+            res.status(400).send('User already exists');
             return;
         }
         catch (error) {

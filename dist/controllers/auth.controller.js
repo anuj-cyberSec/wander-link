@@ -59,9 +59,11 @@ class AuthController {
                         profilePic: photo,
                     });
                     yield user.save();
+                    const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
+                    res.send({ token, user });
+                    return;
                 }
-                const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
-                res.send({ token, user });
+                res.status(400).send('User already exists');
                 return;
             }
             catch (error) {

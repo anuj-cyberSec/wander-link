@@ -54,11 +54,14 @@ const UserSchema: Schema<IUser> = new Schema({
     subscriptionId: { type: Schema.Types.ObjectId, ref: "Subscription" },
     paymentIds: [{ type: Schema.Types.ObjectId, ref: "Payment" }],
     
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+    
+},{
+    timestamps: true,
+    collection: "userData"
+}
+);
 
 
-const User = mongoose.model<IUser>('userData', UserSchema, 'userData');
+const User = mongoose.model<IUser>('User', UserSchema);
 
 export default User;

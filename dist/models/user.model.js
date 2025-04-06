@@ -36,39 +36,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const uuid_1 = require("uuid");
 const UserSchema = new mongoose_1.Schema({
-    userId: { type: String, default: uuid_1.v4 },
-    name: { type: String, /*required: true*/ },
+    userId: { type: String, default: () => (0, uuid_1.v4)() },
+    name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    // password: { type: String, required: true },
+    auth_provider: { type: String, required: true },
+    social_id: { type: String, required: true },
     bio: { type: String },
     age: { type: Number },
-    gender: { type: String },
-    personality: { type: String, enum: ['Introvert', 'Extrovert', 'Adventurous'] },
+    gender: { type: String, enum: ["Male", "Female", "Other"] },
+    personality: { type: String, enum: ["Introvert", "Extrovert", "Adventurous"] },
     interest: { type: [String] },
-    location: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            /*required: true*/
-        },
-        coordinates: {
-            type: [Number],
-            /*required: true*/
-        }
-    },
-    trips: { type: [String] },
     profilePic: { type: String },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
-    languageSpoken: { type: [String] },
-    budget: {
-        type: String,
-        enum: ['Low', 'Medium', 'High']
+    location: {
+        type: { type: String, enum: ["Point"] },
+        coordinates: { type: [Number], index: "2dsphere" }
     },
-    travelStyle: {
-        type: String,
-        enum: ['Backpacking', 'Luxury', 'Solo', 'Group']
-    }
+    // trips: { type: [String] },
+    tripIds: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Trip" }],
+    languageSpoken: { type: [String] },
+    budget: { type: String, enum: ["Low", "Medium", "High"] },
+    travelStyle: { type: String, enum: ["Backpacking", "Luxury", "Solo", "Group"] },
+    subscriptionId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Subscription" },
+    paymentIds: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Payment" }],
+}, {
+    timestamps: true,
+    collection: "userData"
 });
-const User = mongoose_1.default.model('userData', UserSchema, 'userData');
+const User = mongoose_1.default.model('User', UserSchema);
 exports.default = User;

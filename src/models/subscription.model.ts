@@ -17,6 +17,8 @@ interface ISubscription extends Document {
         profileBoost: boolean;
         verifiedBadge: boolean;
     };
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const SubscriptionSchema: Schema<ISubscription> = new Schema({
@@ -35,9 +37,14 @@ const SubscriptionSchema: Schema<ISubscription> = new Schema({
         unlimitedMessages: { type: Boolean, default: false },
         profileBoost: { type: Boolean, default: false },
         verifiedBadge: { type: Boolean, default: false }
+    },
+},
+    {
+        timestamps: true,
+        collection: "subscriptionData"
     }
-});
+);
 
-const Subscription = mongoose.model<ISubscription>("Subscription", SubscriptionSchema, "Subscription");
+const Subscription = mongoose.model<ISubscription>("Subscription", SubscriptionSchema);
 
 export default Subscription;

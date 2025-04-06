@@ -35,29 +35,25 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const uuid_1 = require("uuid");
-const TripSchema = new mongoose_1.Schema({
-    tripId: { type: String, default: () => (0, uuid_1.v4)() },
-    creator: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
-    destination: { type: String, required: true, index: true },
-    travellingFrom: { type: String, required: true },
-    startDate: { type: Date, required: true, index: true },
-    endDate: { type: Date, required: true },
-    description: { type: String, maxlength: 500 },
-    participants: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User" }], // Array of user IDs
-    requests: [
-        {
-            userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
-            status: { type: String, enum: ["pending", "approved", "declined"], default: "pending" }
-        }
-    ],
-    status: { type: String, enum: ["Open", "Closed"], default: "Open" },
-    budget: { type: String, enum: ["Low", "Medium", "High"], required: true },
-    tripType: { type: String, enum: ["Backpacking", "Luxury", "Solo", "Group"], required: true },
-    visibility: { type: String, enum: ["Public", "Private"], required: true },
-    maxParticipants: { type: Number, min: 1, default: 10 }, // Default max participants to 10
+const SubscriptionSchema = new mongoose_1.Schema({
+    subscriptionId: { type: String, default: () => (0, uuid_1.v4)() },
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
+    plan: { type: String, enum: ["free", "premium", "pro"], default: "free" },
+    status: { type: String, enum: ["active", "inactive", "cancelled"], default: "inactive" },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    autoRenew: { type: Boolean, default: false },
+    lastPaymentDate: { type: Date },
+    nextBillingDate: { type: Date },
+    addons: {
+        swiping: { type: Boolean, default: false },
+        unlimitedMessages: { type: Boolean, default: false },
+        profileBoost: { type: Boolean, default: false },
+        verifiedBadge: { type: Boolean, default: false }
+    },
 }, {
-    timestamps: true, // Automatically adds createdAt and updatedAt
-    collection: "tripData"
+    timestamps: true,
+    collection: "subscriptionData"
 });
-const Trip = mongoose_1.default.model("Trip", TripSchema);
-exports.default = Trip;
+const Subscription = mongoose_1.default.model("Subscription", SubscriptionSchema);
+exports.default = Subscription;
