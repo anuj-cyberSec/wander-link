@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import User from '../models/user.model';
 import path from 'path';
+import nodemailer from 'nodemailer';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 const secret = process.env.JWT_SECRET as string;
@@ -70,6 +71,113 @@ class AuthController {
             return;
         }
 
+    }
+
+    static async sendOTP(req: Request, res: Response){
+        try{
+            const {email, password} = req.body;
+            if(!email || !password){
+                res.status(400).send('Please provide email and password');
+                return;
+            }
+            let user = await User.findOne({email: email});
+            if(user){
+                res.status(400).send('User already exists');
+                return;
+            }
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // creating new user with otp set
+            const newUser = new User({
+                email: email,
+                otp: otp
+            });
+            await newUser.save();
+
+            // sending otp to user's email
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL,
+                    pass: process.env.PASSWORD
+                }
+            });
+
+            const mailOptions = {
+                from: process.env.EMAIL,
+                to: email,
+                subject: 'OTP for WanderLink registration',
+                text: `Your OTP is ${otp}`
+            }
+            await transporter.sendMail(mailOptions);
+            res.send('OTP sent to email');
+            return;
+
+            
+            
+
+        }
+        catch(error){
+            console.log(error);
+            res.status(500).send('Error');
+            return;
+        }
+    }
+
+    static async verifyOTP(req: Request, res: Response){
+        try{
+            const {email, otp, password} = req.body;
+            if(!email || !otp){
+                res.status(400).send('Please provide email and otp');
+                return;
+            }
+            let user = await User.findOne({email: email});
+            if(!user){
+                res.status(400).send('User not found');
+                return;
+            }
+            if(user.otp === otp){
+                user.password = password;
+                user.otp = "";
+                await user.save();
+                res.send('OTP verified');
+                return;
+            }
+            res.status(400).send('Invalid otp');
+            return;
+        }
+        catch(error){
+            console.log(error);
+            res.status(500).send('Error');
+            return;
+        }
+    }
+
+    static async login(req: Request, res: Response) {
+        try{
+            const {email, password} = req.body;
+            if(!email || !password){
+                res.status(400).send('Please provide email and password');
+                return;
+            }
+            let user = await User.findOne({email: email});
+            if(!user){
+                res.status(400).send('User not found');
+                return;
+            }
+            if(user.password !== password){
+                res.status(400).send('Invalid password');
+                return;
+            }
+            const token = jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
+            res.send({token, user});
+            return;
+        }
+        catch(error){
+            console.log(error);
+            res.status(500).send('Error');
+            return;
+        }
     }
 
 }

@@ -18,6 +18,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const path_1 = __importDefault(require("path"));
+const nodemailer_1 = __importDefault(require("nodemailer"));
 dotenv_1.default.config({ path: path_1.default.join(__dirname, '../../.env') });
 const secret = process.env.JWT_SECRET;
 if (!secret) {
@@ -64,6 +65,109 @@ class AuthController {
                     return;
                 }
                 res.status(400).send('User already exists');
+                return;
+            }
+            catch (error) {
+                console.log(error);
+                res.status(500).send('Error');
+                return;
+            }
+        });
+    }
+    static sendOTP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { email, password } = req.body;
+                if (!email || !password) {
+                    res.status(400).send('Please provide email and password');
+                    return;
+                }
+                let user = yield user_model_1.default.findOne({ email: email });
+                if (user) {
+                    res.status(400).send('User already exists');
+                    return;
+                }
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                // creating new user with otp set
+                const newUser = new user_model_1.default({
+                    email: email,
+                    otp: otp
+                });
+                yield newUser.save();
+                // sending otp to user's email
+                const transporter = nodemailer_1.default.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: process.env.EMAIL,
+                        pass: process.env.PASSWORD
+                    }
+                });
+                const mailOptions = {
+                    from: process.env.EMAIL,
+                    to: email,
+                    subject: 'OTP for WanderLink registration',
+                    text: `Your OTP is ${otp}`
+                };
+                yield transporter.sendMail(mailOptions);
+                res.send('OTP sent to email');
+                return;
+            }
+            catch (error) {
+                console.log(error);
+                res.status(500).send('Error');
+                return;
+            }
+        });
+    }
+    static verifyOTP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { email, otp, password } = req.body;
+                if (!email || !otp) {
+                    res.status(400).send('Please provide email and otp');
+                    return;
+                }
+                let user = yield user_model_1.default.findOne({ email: email });
+                if (!user) {
+                    res.status(400).send('User not found');
+                    return;
+                }
+                if (user.otp === otp) {
+                    user.password = password;
+                    user.otp = "";
+                    yield user.save();
+                    res.send('OTP verified');
+                    return;
+                }
+                res.status(400).send('Invalid otp');
+                return;
+            }
+            catch (error) {
+                console.log(error);
+                res.status(500).send('Error');
+                return;
+            }
+        });
+    }
+    static login(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { email, password } = req.body;
+                if (!email || !password) {
+                    res.status(400).send('Please provide email and password');
+                    return;
+                }
+                let user = yield user_model_1.default.findOne({ email: email });
+                if (!user) {
+                    res.status(400).send('User not found');
+                    return;
+                }
+                if (user.password !== password) {
+                    res.status(400).send('Invalid password');
+                    return;
+                }
+                const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
+                res.send({ token, user });
                 return;
             }
             catch (error) {

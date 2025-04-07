@@ -5,6 +5,8 @@ interface IUser extends Document {
     userId: string;
     name: string;
     email: string;
+    password: string;
+    otp: string;
     auth_provider: string;
     social_id: string;
     bio?: string;
@@ -33,6 +35,8 @@ const UserSchema: Schema<IUser> = new Schema({
     userId: { type: String, default: () => uuidv4() },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    password: { type: String },
+    otp: { type: String },
     auth_provider: { type: String, required: true }, 
     social_id: { type: String, required: true },
     bio: { type: String },
