@@ -77,38 +77,45 @@ class AuthController {
     static sendOTP(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { email, password } = req.body;
-                if (!email || !password) {
+                const { email } = req.body;
+                if (!email) {
                     res.status(400).send('Please provide email and password');
                     return;
                 }
                 let user = yield user_model_1.default.findOne({ email: email });
                 if (user) {
+                    console.log("user is ", user);
                     res.status(400).send('User already exists');
                     return;
                 }
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                // creating new user with otp set
-                const newUser = new user_model_1.default({
-                    email: email,
-                    otp: otp
-                });
-                yield newUser.save();
-                // sending otp to user's email
+                console.log("otp is ", otp);
                 const transporter = nodemailer_1.default.createTransport({
-                    service: 'gmail',
+                    host: 'smtp.secureserver.net',
+                    port: 587,
+                    secure: false,
                     auth: {
                         user: process.env.EMAIL,
                         pass: process.env.PASSWORD
                     }
                 });
+                // console.log("transporter is ", transporter);    
                 const mailOptions = {
                     from: process.env.EMAIL,
                     to: email,
                     subject: 'OTP for WanderLink registration',
                     text: `Your OTP is ${otp}`
                 };
-                yield transporter.sendMail(mailOptions);
+                const result = yield transporter.sendMail(mailOptions);
+                console.log("result is ", result);
+                // creating new user with otp set
+                const newUser = new user_model_1.default({
+                    email: email,
+                    otp: otp,
+                    auth_provider: "email",
+                });
+                yield newUser.save();
+                // sending otp to user's email
                 res.send('OTP sent to email');
                 return;
             }

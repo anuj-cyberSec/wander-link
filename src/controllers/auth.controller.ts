@@ -75,33 +75,31 @@ class AuthController {
 
     static async sendOTP(req: Request, res: Response){
         try{
-            const {email, password} = req.body;
-            if(!email || !password){
+            const {email} = req.body;
+            if(!email ){
                 res.status(400).send('Please provide email and password');
                 return;
             }
             let user = await User.findOne({email: email});
             if(user){
+                console.log("user is ", user);
                 res.status(400).send('User already exists');
                 return;
             }
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            
-            // creating new user with otp set
-            const newUser = new User({
-                email: email,
-                otp: otp
-            });
-            await newUser.save();
 
-            // sending otp to user's email
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            console.log("otp is ", otp);
+            
             const transporter = nodemailer.createTransport({
-                service: 'gmail',
+                host: 'smtp.secureserver.net',
+                port: 587,
+                secure: false,
                 auth: {
                     user: process.env.EMAIL,
                     pass: process.env.PASSWORD
                 }
             });
+            // console.log("transporter is ", transporter);    
 
             const mailOptions = {
                 from: process.env.EMAIL,
@@ -109,7 +107,19 @@ class AuthController {
                 subject: 'OTP for WanderLink registration',
                 text: `Your OTP is ${otp}`
             }
-            await transporter.sendMail(mailOptions);
+            const result = await transporter.sendMail(mailOptions);
+            console.log("result is ", result);
+
+            // creating new user with otp set
+            const newUser = new User({
+                email: email,
+                otp: otp,
+                auth_provider: "email",
+            });
+            await newUser.save();
+
+            // sending otp to user's email
+            
             res.send('OTP sent to email');
             return;
 
