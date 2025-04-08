@@ -18,7 +18,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const path_1 = __importDefault(require("path"));
-const nodemailer_1 = __importDefault(require("nodemailer"));
+const email_utils_1 = __importDefault(require("../utils/email.utils"));
 dotenv_1.default.config({ path: path_1.default.join(__dirname, '../../.env') });
 const secret = process.env.JWT_SECRET;
 if (!secret) {
@@ -90,25 +90,29 @@ class AuthController {
                 }
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
                 console.log("otp is ", otp);
-                const transporter = nodemailer_1.default.createTransport({
-                    host: 'smtp.secureserver.net',
-                    port: 587,
-                    secure: false,
-                    auth: {
-                        user: process.env.EMAIL,
-                        pass: process.env.PASSWORD
-                    }
-                });
-                // console.log("transporter is ", transporter);    
-                const mailOptions = {
-                    from: process.env.EMAIL,
-                    to: email,
-                    subject: 'OTP for WanderLink registration',
-                    text: `Your OTP is ${otp}`
-                };
-                const result = yield transporter.sendMail(mailOptions);
-                console.log("result is ", result);
+                // const transporter = nodemailer.createTransport({
+                //     host: 'smtp.secureserver.net',
+                //     port: 587,
+                //     secure: false,
+                //     auth: {
+                //         user: process.env.EMAIL,
+                //         pass: process.env.PASSWORD
+                //     }
+                // });
+                // // console.log("transporter is ", transporter);    
+                // const mailOptions = {
+                //     from: process.env.EMAIL,
+                //     to: email,
+                //     subject: 'OTP for WanderLink registration',
+                //     text: `Your OTP is ${otp}`
+                // }
+                // const result = await transporter.sendMail(mailOptions);
+                // console.log("result is ", result);
                 // creating new user with otp set
+                const to = email;
+                const subject = 'OTP for WanderLink registration';
+                const html = `Your OTP is ${otp}`;
+                yield (0, email_utils_1.default)(to, subject, html);
                 const newUser = new user_model_1.default({
                     email: email,
                     otp: otp,
