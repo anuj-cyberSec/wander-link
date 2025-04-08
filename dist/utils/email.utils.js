@@ -20,8 +20,8 @@ const sendEmail = (to, subject, html) => __awaiter(void 0, void 0, void 0, funct
             port: 465, // SSL port
             secure: true, // Use SSL
             auth: {
-                user: 'founders@wanderconnect.in', // Your GoDaddy email address
-                pass: 'wander@connect_kunal&anuj', // Your GoDaddy email password
+                user: process.env.Email,
+                pass: process.env.Password
             },
         });
         const mailOptions = {
