@@ -82,8 +82,7 @@ class AuthController {
                 return;
             }
             let user = await User.findOne({email: email});
-            if(user){
-                console.log("user is ", user);
+            if(user && user.verified){
                 res.status(400).send('User already exists');
                 return;
             }
@@ -155,6 +154,7 @@ class AuthController {
             if(user.otp === otp){
                 user.password = password;
                 user.otp = "";
+                user.verified = true;
                 await user.save();
                 res.send('OTP verified');
                 return;

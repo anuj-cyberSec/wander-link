@@ -40,6 +40,7 @@ const UserSchema = new mongoose_1.Schema({
     name: { type: String, /*required: true*/ },
     email: { type: String, required: true, unique: true },
     password: { type: String },
+    verified: { type: Boolean, default: false },
     otp: { type: String },
     auth_provider: { type: String, required: true },
     social_id: { type: String, /* required: true*/ },
