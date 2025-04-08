@@ -82,9 +82,23 @@ class AuthController {
                 return;
             }
             let user = await User.findOne({email: email});
-            if(user && user.verified){
-                res.status(400).send('User already exists');
-                return;
+            if(user){
+                if(user.verified){
+                    res.status(400).send('User already exists');
+                    return;
+                }
+                else{
+                    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                    console.log("otp is ", otp);
+                    user.otp = otp;
+                    await user.save();
+                    const to = email;
+                    const subject = 'OTP for WanderLink registration';
+                    const html = `Your OTP is ${otp}`;
+                    await sendEmail(to, subject, html);
+                    res.send('OTP sent to email');
+                    return;
+                }
             }
 
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
