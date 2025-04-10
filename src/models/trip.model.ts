@@ -58,6 +58,7 @@ interface ITrip extends Document {
     startDate: Date;
     endDate: Date;
     description: string;
+    // tripVibe : 
     participants: Schema.Types.ObjectId[];  // Array of User ObjectIds
     requests: { userId: Schema.Types.ObjectId, status: "pending" | "approved" | "declined" }[]; // Join requests
     status: "Open" | "Closed";

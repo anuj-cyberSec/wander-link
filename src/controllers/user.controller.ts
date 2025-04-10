@@ -6,7 +6,7 @@ class UserController {
     static async getUsers(req: Request, res: Response) {
         // res.send('Hello World!');
         try {
-            const {place, gender, age = '', language = [], interest = [], personality = []} = req.body;
+            const { place, gender, age = '', language = [], interest = [], personality = [] } = req.body;
 
             // now gender : [ 'Male', 'Female']
             // Age : '22 - 28' or ''
@@ -19,7 +19,7 @@ class UserController {
                 return;
             }
 
-            const filteredTripData = await Trip.find({destination : { $regex : place, $options : 'i' }});
+            const filteredTripData = await Trip.find({ destination: { $regex: place, $options: 'i' } });
 
             const userdata = await User.find({})
 
@@ -79,16 +79,16 @@ class UserController {
 
     static async getProfile(req: Request, res: Response) {
         try {
-            
+
             const userId = (req as any).user.id;
-            if(!userId){
+            if (!userId) {
                 res.send('Invalid userid');
                 return;
             }
 
             console.log(userId);
             const user = await User.findById(userId);
-            if(!user){
+            if (!user) {
                 res.send('user not found');
                 return;
             }
@@ -103,18 +103,18 @@ class UserController {
         }
     }
 
-    static async updateProfile(req: Request, res: Response){
-        try{
+    static async updateProfile(req: Request, res: Response) {
+        try {
             const userId = (req as any).user.id;
-            if(!userId){
+            if (!userId) {
                 res.send('Invalid userId');
                 return;
             }
 
-            const {name, bio, age, gender, personality, interest, profilePic, languageSpoken} = req.body;
-            
+            const { name, bio, age, gender, personality, interest, profilePic, languageSpoken } = req.body;
+
             const user = await User.findById(userId);
-            if(!user){
+            if (!user) {
                 res.send('user not found');
                 return;
             }
@@ -130,7 +130,7 @@ class UserController {
             user.languageSpoken = languageSpoken || user.languageSpoken;
 
             await user.save();
-            
+
 
             // user?.updateOne({
             //     name,
@@ -147,9 +147,9 @@ class UserController {
             res.send('profile updated');
             return;
 
-            
+
         }
-        catch(error){
+        catch (error) {
             // console.log('error is ', error);
             res.send('Internal server error');
             return;
