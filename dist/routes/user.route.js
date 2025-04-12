@@ -8,9 +8,10 @@ const user_controller_1 = __importDefault(require("../controllers/user.controlle
 const authenticator_1 = __importDefault(require("../middleware/authenticator"));
 const router = express_1.default.Router();
 const userController = new user_controller_1.default();
-router.post('/getUsers', authenticator_1.default, user_controller_1.default.getUsers);
+// router.post('/getUsers', authentication, UserController.getUsers);
+router.post('/homepage', authenticator_1.default, user_controller_1.default.homepage);
 router.post('/createTrip', authenticator_1.default, user_controller_1.default.createTrip);
 router.post('/updateUser', authenticator_1.default, user_controller_1.default.updateUser);
 router.get('/getProfile', authenticator_1.default, user_controller_1.default.getProfile);
-router.post('/updateProfile', authenticator_1.default, user_controller_1.default.updateProfile);
+// router.post('/updateProfile', authentication, UserController.updateProfile);
 exports.default = router;

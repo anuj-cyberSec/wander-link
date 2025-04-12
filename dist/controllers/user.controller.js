@@ -15,45 +15,138 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const user_model_1 = __importDefault(require("../models/user.model"));
 const trip_model_1 = __importDefault(require("../models/trip.model"));
 class UserController {
-    static getUsers(req, res) {
+    static homepage(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            // res.send('Hello World!');
             try {
-                const { place, gender, age = '', language = [], interest = [], personality = [] } = req.body;
-                // now gender : [ 'Male', 'Female']
-                // Age : '22 - 28' or ''
-                // Language : ['English', 'Hindi'] or []
-                // Interest : ['x', 'y', 'z'] or []
-                // personalitytype : ['x', 'y', 'z'] or []
-                if (!place) {
-                    const data = yield trip_model_1.default.find();
-                    res.send(data);
+                // nearest location from user
+                // filters will be location, gender, age, startdate, tripvibe
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ error: 'Invalid userid' });
                     return;
                 }
-                const filteredTripData = yield trip_model_1.default.find({ destination: { $regex: place, $options: 'i' } });
-                const userdata = yield user_model_1.default.find({});
-                const alltrip = yield trip_model_1.default.find({ destination: { $regex: place, $options: 'i' } });
-                // console.log("All trip", alltrip);
-                res.send(alltrip);
+                const user = yield user_model_1.default.findById(userId);
+                console.log("user id is ", user === null || user === void 0 ? void 0 : user.id);
+                // console.log(user?.location?.coordinates);
+                if (!user) {
+                    res.status(400).json({ error: 'user not found' });
+                    return;
+                }
+                // applying aggregation pipeline to fetch start date, end date, tripvibe, description, destination, from trip collection
+                // and aboutMe , profilePic, name, gender, age, from user collection
+                if (!user || !user.location || !user.location.coordinates) {
+                    res.status(400).json({ error: 'User location not found' });
+                    return;
+                }
+                console.log("user location is ", user.location.coordinates);
+                const EARTH_RADIUS_IN_METERS = 6378100;
+                const maxDistanceInMeters = 1000000;
+                // Debug logging
+                console.log("Searching for trips within", maxDistanceInMeters, "meters of coordinates:", user.location.coordinates);
+                const trips = yield trip_model_1.default.aggregate([
+                    {
+                        $lookup: {
+                            from: "userData",
+                            localField: "creator",
+                            foreignField: "_id",
+                            as: "creator"
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: "$creator",
+                            preserveNullAndEmptyArrays: true
+                        }
+                    },
+                    {
+                        $match: {
+                            "creator.location": {
+                                $geoWithin: {
+                                    $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            startDate: 1,
+                            endDate: 1,
+                            destination: 1,
+                            travellingFrom: 1,
+                            description: 1,
+                            tripVibe: 1,
+                            "creator._id": 1,
+                            "creator.name": 1,
+                            "creator.profilePic": 1,
+                            "creator.gender": 1,
+                            "creator.age": 1,
+                            "creator.aboutMe.personality": 1
+                        }
+                    }
+                ]);
+                // Debug logging
+                // console.log("Found trips:", trips.length);
+                if (trips.length > 0) {
+                    console.log("Sample trip creator:", trips[0].creator);
+                }
+                res.json(trips);
                 return;
             }
             catch (error) {
-                res.send('Error');
-                return;
+                console.error("Aggregation Error:", error);
+                res.status(500).json({ error: 'Internal server error' });
             }
         });
     }
+    // static async getUsers(req: Request, res: Response) {
+    //     // res.send('Hello World!');
+    //     try {
+    //         const { place, gender, age = '', language = [], interest = [], personality = [] } = req.body;
+    //         // now gender : [ 'Male', 'Female']
+    //         // Age : '22 - 28' or ''
+    //         // Language : ['English', 'Hindi'] or []
+    //         // Interest : ['x', 'y', 'z'] or []
+    //         // personalitytype : ['x', 'y', 'z'] or []
+    //         if (!place) {
+    //             const data = await Trip.find();
+    //             res.send(data);
+    //             return;
+    //         }
+    //         const filteredTripData = await Trip.find({ destination: { $regex: place, $options: 'i' } });
+    //         const userdata = await User.find({})
+    //         const alltrip = await Trip.find({ destination: { $regex: place, $options: 'i' } });
+    //         // console.log("All trip", alltrip);
+    //         res.send(alltrip);
+    //         return;
+    //     }
+    //     catch (error) {
+    //         res.send('Error');
+    //         return;
+    //     }
+    // }
     static createTrip(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 // when applying authentication remove creator rather fetch from db
-                const { creator, destination, travellingFrom, startDate, endDate, description, budget, tripType, visibility } = req.body;
-                if (!creator || !destination || !travellingFrom || !startDate || !endDate || !description || !budget || !tripType || !visibility) {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ error: 'Invalid userid' });
+                    return;
+                }
+                const user = yield user_model_1.default.findById(userId);
+                if (!user) {
+                    res.status(400).json({ error: 'User not found' });
+                    return;
+                }
+                const { destination, travellingFrom, startDate, endDate, description, budget, tripType, visibility, tripVibe, } = req.body;
+                if (!destination || !travellingFrom || !startDate || !endDate || !description || !budget || !tripType || !visibility) {
                     res.send('Please fill all the fields');
                     return;
                 }
+                console.log("user object id is ", user._id);
                 const newTrip = new trip_model_1.default({
-                    creator, destination, travellingFrom, startDate, endDate, description, budget, tripType, visibility
+                    destination, travellingFrom, startDate, endDate, description, budget, tripType, visibility, tripVibe, creator: user._id, participants: [user._id],
                 });
                 yield newTrip.save();
                 res.send('Trip created successfully');
@@ -105,51 +198,6 @@ class UserController {
             }
             catch (error) {
                 res.send('Error');
-                return;
-            }
-        });
-    }
-    static updateProfile(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const userId = req.user.id;
-                if (!userId) {
-                    res.send('Invalid userId');
-                    return;
-                }
-                const { name, bio, age, gender, personality, interest, profilePic, languageSpoken } = req.body;
-                const user = yield user_model_1.default.findById(userId);
-                if (!user) {
-                    res.send('user not found');
-                    return;
-                }
-                // update profile, if any field is not present, keep it as it is
-                user.name = name || user.name;
-                user.bio = bio || user.bio;
-                user.age = age || user.age;
-                user.gender = gender || user.gender;
-                user.personality = personality || user.personality;
-                user.interest = interest || user.interest;
-                user.profilePic = profilePic || user.profilePic;
-                user.languageSpoken = languageSpoken || user.languageSpoken;
-                yield user.save();
-                // user?.updateOne({
-                //     name,
-                //     bio,
-                //     age,
-                //     gender,
-                //     personality,
-                //     interest,
-                //     profilePic,
-                //     languageSpoken
-                // })
-                // user?.save();
-                res.send('profile updated');
-                return;
-            }
-            catch (error) {
-                // console.log('error is ', error);
-                res.send('Internal server error');
                 return;
             }
         });

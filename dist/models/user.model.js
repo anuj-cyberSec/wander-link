@@ -47,8 +47,51 @@ const UserSchema = new mongoose_1.Schema({
     bio: { type: String },
     age: { type: Number },
     gender: { type: String, enum: ["Male", "Female", "Other"] },
-    personality: { type: String, enum: ["Introvert", "Extrovert", "Adventurous"] },
-    interest: { type: [String] },
+    aboutMe: {
+        personality: [{
+                name: {
+                    type: String,
+                    enum: ["Introvert", "Extrovert", "Ambivert", "Empath", "Chill Vibes", "Social Butterfly"]
+                },
+                iconUrl: { type: String }
+            }],
+        travelPreference: [{
+                name: {
+                    type: String,
+                    enum: ["Group Explorer", "Planned Itineraies", "Road Tripper", "Nature Lover", "History Buff", "Culture Seeker", "Beach Bum", "Mountain Soul", "Budget Traveler", "Luxury Lover", "Passport Ready"]
+                },
+                iconUrl: { type: String }
+            }],
+        lifestyleChoice: [{
+                name: {
+                    type: String,
+                    enum: ["Smoker", "Non-Smoker", "Vegan/Vegetarian", "Fitness Freak", "Night Owl", "Early Bird", "Party Animal", "Sober Traveller", "Occasional Drinker"]
+                },
+                iconUrl: { type: String }
+            }],
+        physicalInfo: {
+            name: {
+                type: String,
+                enum: ["Height", "Body Type"]
+            },
+            value: { type: Number },
+            iconUrl: { type: String }
+        },
+        hobbiesInterest: {
+            name: {
+                type: String,
+                enum: ["Loves Driving", "Music Lover", "Bookworm", "Foodie", "Dancer", "Gamer", "Yoga Enthusiast", "Meditation", "Cycling", "Vlogging / Content Creation", "Photography", "Camping"]
+            },
+            iconUrl: { type: String }
+        },
+        funIcebreakerTag: {
+            name: {
+                type: String,
+                enum: ["Always Down to Explore", "Never Says No to Coffee", "Carries Snacks Always", "Can Sleep Anywhere", "Travel DJ", "Map Reader", "The Planner Friend", "Chill Companion", "Loves Deep Conversations"]
+            },
+            iconUrl: { type: String }
+        }
+    },
     profilePic: { type: String },
     location: {
         type: { type: String, enum: ["Point"] },

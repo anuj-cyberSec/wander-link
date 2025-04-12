@@ -1,5 +1,5 @@
-import mongoose, {Schema, Document} from "mongoose";
-import {v4 as uuidv4} from 'uuid';
+import mongoose, { Schema, Document } from "mongoose";
+import { v4 as uuidv4 } from 'uuid';
 // interface ITrip extends Document {
 
 //     tripId : string;
@@ -16,7 +16,7 @@ import {v4 as uuidv4} from 'uuid';
 //     tripType : string;
 //     visibility : string;   
 //     maxParticipants: number;
-    
+
 // }
 // const TripSchema: Schema<ITrip> = new Schema({
 //     tripId: { type: String, default: uuidv4 },
@@ -58,7 +58,10 @@ interface ITrip extends Document {
     startDate: Date;
     endDate: Date;
     description: string;
-    // tripVibe : 
+    tripVibe : Array<{
+        name : string;
+        iconUrl : string;
+    }>;
     participants: Schema.Types.ObjectId[];  // Array of User ObjectIds
     requests: { userId: Schema.Types.ObjectId, status: "pending" | "approved" | "declined" }[]; // Join requests
     status: "Open" | "Closed";
@@ -91,8 +94,17 @@ const TripSchema: Schema<ITrip> = new Schema(
         tripType: { type: String, enum: ["Backpacking", "Luxury", "Solo", "Group"], required: true },
         visibility: { type: String, enum: ["Public", "Private"], required: true },
         maxParticipants: { type: Number, min: 1, default: 10 },  // Default max participants to 10
+        tripVibe: [{
+            name: {
+                type: String, enum: ["Beach Vacation", "Mountain", "City Break / Urban Exploration", "Cultural & Historical Tour", "Trekking / Hiking Trip", "Luxury Resort Stay", "Cruise Vacation", "Road Trip", "Backpacking Adventure", "Wildlife Safari", "Skiing / Snowboarding Trip", "Spa & Wellness Retreat", "Island Hopping", "Festival or Event Travel ", "Food & Culinary Tour", "Pilgrimage / Spiritual Journey", "Eco-Tourism / Nature Immersion", "Digital Detox / Off-the-Grid Escape", "Cycling Tour", "Surfing Trip", "Volunteer Travel / “Voluntourism”", "Business Trip", "Digital Nomad / Workcation", "Family Vacation", "Romantic Getaway / Honeymoon", "Art or Creative Retreat", "Solo Travel Adventure", "Group Tour Package", "Train Journey / Scenic Railway Trip"],
+
+                iconUrl : {
+                    type : String
+                }
+            }
+        }],
     },
-    { 
+    {
         timestamps: true, // Automatically adds createdAt and updatedAt
         collection: "tripData"
     }

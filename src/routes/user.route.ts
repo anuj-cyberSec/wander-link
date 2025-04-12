@@ -6,9 +6,10 @@ const router = express.Router();
 
 const userController = new UserController();
 
-router.post('/getUsers', authentication, UserController.getUsers);
+// router.post('/getUsers', authentication, UserController.getUsers);
+router.post('/homepage', authentication, UserController.homepage);
 router.post('/createTrip', authentication, UserController.createTrip);
 router.post('/updateUser', authentication, UserController.updateUser);
 router.get('/getProfile', authentication, UserController.getProfile);
-router.post('/updateProfile', authentication, UserController.updateProfile);
+// router.post('/updateProfile', authentication, UserController.updateProfile);
 export default router;
