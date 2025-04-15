@@ -10,6 +10,7 @@ interface IUser extends Document {
     otp: string;
     auth_provider: string;
     social_id: string;
+    designation?: string;
     bio?: string;
     age?: number;
     gender?: "Male" | "Female" | "Other";
@@ -67,6 +68,7 @@ const UserSchema: Schema<IUser> = new Schema({
     otp: { type: String },
     auth_provider: { type: String, required: true },
     social_id: { type: String,/* required: true*/ },
+    designation: { type: String },
     bio: { type: String },
     age: { type: Number },
     gender: { type: String, enum: ["Male", "Female", "Other"] },
@@ -92,28 +94,29 @@ const UserSchema: Schema<IUser> = new Schema({
             },
             iconUrl: { type: String }
         }],
-        physicalInfo: {
+        physicalInfo: [{
             name: {
                 type: String,
-                enum: ["Height",  "Body Type"]
+                enum: ["Height", "Body Type",  ]
             },
-            value: { type: Number },
+            value: { type: String },
             iconUrl: { type: String }
-        },
-        hobbiesInterest: {
+        }],
+        hobbiesInterest: [{
             name: {
                 type: String,
                 enum: ["Loves Driving","Music Lover","Bookworm","Foodie","Dancer","Gamer","Yoga Enthusiast","Meditation","Cycling","Vlogging / Content Creation","Photography","Camping"]
             },
             iconUrl: { type: String }
-        },
-        funIcebreakerTag: {
+        }],
+        funIcebreakerTag: [{
             name: {
                 type: String,
                 enum: ["Always Down to Explore","Never Says No to Coffee","Carries Snacks Always","Can Sleep Anywhere","Travel DJ","Map Reader","The Planner Friend","Chill Companion","Loves Deep Conversations"]
             },
             iconUrl: { type: String }
-        }
+        }],
+        
     },
 profilePic: { type: String },
 location: {

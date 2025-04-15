@@ -185,79 +185,86 @@ class UserController {
 
             const userId = (req as any).user.id;
             if (!userId) {
-                res.send('Invalid userid');
+                res.status(400).json({message:'Invalid userid'});
                 return;
             }
 
             console.log(userId);
             const user = await User.findById(userId);
             if (!user) {
-                res.send('user not found');
+                res.status(404).json({message:'user not found'});
                 return;
             }
 
-            res.send(user);
+            res.status(200).json({message:user});
             return;
 
         }
         catch (error) {
-            res.send('Error');
+            res.status(500).json({message: 'Internal Server Error'});
             return;
         }
     }
 
-    // static async updateProfile(req: Request, res: Response) {
-    //     try {
-    //         const userId = (req as any).user.id;
-    //         if (!userId) {
-    //             res.send('Invalid userId');
-    //             return;
-    //         }
+    
 
-    //         const { name, bio, age, gender, personality, interest, profilePic, languageSpoken } = req.body;
-
-    //         const user = await User.findById(userId);
-    //         if (!user) {
-    //             res.send('user not found');
-    //             return;
-    //         }
-
-    //         // update profile, if any field is not present, keep it as it is
-    //         user.name = name || user.name;
-    //         user.bio = bio || user.bio;
-    //         user.age = age || user.age
-    //         user.gender = gender || user.gender;
-    //         // user.personality = personality || user.personality;
-    //         // user.interest = interest || user.interest;
-    //         user.profilePic = profilePic || user.profilePic;
-    //         user.languageSpoken = languageSpoken || user.languageSpoken;
-
-    //         await user.save();
+    static async createProfile(req: Request, res: Response) {
+        try{
+            let {name, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, profilePic, location, languageSpoken, budget, travelStyle } = req.body;
 
 
-    //         // user?.updateOne({
-    //         //     name,
-    //         //     bio,
-    //         //     age,
-    //         //     gender,
-    //         //     personality,
-    //         //     interest,
-    //         //     profilePic,
-    //         //     languageSpoken
-    //         // })
+            const userId = (req as any).user.id;
+            if (!userId) {
+                res.status(400).json({message:'Invalid userId'});
+                return;
+            }
+            
+            const user = await User.findById(userId);
+            console.log("user is ", user);
+            if (!user) {
+                res.status(404).json({message:'user not found'});
+                return;
+            }
 
-    //         // user?.save();
-    //         res.send('profile updated');
-    //         return;
+            user.name = name || user.name;
+            user.bio = bio || user.bio;
+            user.age = age || user.age;
+            user.gender = gender || user.gender;
+            
+            // Initialize aboutMe if it doesn't exist
+            if (!user.aboutMe) {
+                user.aboutMe = {
+                    personality: [],
+                    travelPreference: [],
+                    lifestyleChoice: [],
+                    physicalInfo: [],
+                    hobbiesInterest: [],
+                    funIcebreakerTag: []
+                };
+            }
+            
+            user.aboutMe.personality = personality || user.aboutMe.personality;
+            user.aboutMe.travelPreference = travelPreference || user.aboutMe.travelPreference;
+            user.aboutMe.lifestyleChoice = lifestyleChoice || user.aboutMe.lifestyleChoice;
+            user.aboutMe.physicalInfo = physicalInfo || user.aboutMe.physicalInfo;
+            user.aboutMe.hobbiesInterest = hobbiesInterest || user.aboutMe.hobbiesInterest;
+            user.aboutMe.funIcebreakerTag = funIcebreakerTag || user.aboutMe.funIcebreakerTag;
+            user.profilePic = profilePic || user.profilePic;
+            user.location = location || user.location;
+            user.languageSpoken = languageSpoken || user.languageSpoken;
+            user.budget = budget || user.budget;
+            user.travelStyle = travelStyle || user.travelStyle;
 
-
-    //     }
-    //     catch (error) {
-    //         // console.log('error is ', error);
-    //         res.send('Internal server error');
-    //         return;
-    //     }
-    // }
+            await user.save();
+            res.status(200).json({messsage:"user updated successfully"});
+            return;
+            
+        }
+        catch(error){
+            res.status(500).json({message: 'Internal Server Error'});
+            return;
+        }
+    }
 }
 
 export default UserController;

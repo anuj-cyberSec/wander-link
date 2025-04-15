@@ -13,5 +13,6 @@ router.post('/homepage', authenticator_1.default, user_controller_1.default.home
 router.post('/createTrip', authenticator_1.default, user_controller_1.default.createTrip);
 router.post('/updateUser', authenticator_1.default, user_controller_1.default.updateUser);
 router.get('/getProfile', authenticator_1.default, user_controller_1.default.getProfile);
+router.post('/create-profile', authenticator_1.default, user_controller_1.default.createProfile);
 // router.post('/updateProfile', authentication, UserController.updateProfile);
 exports.default = router;

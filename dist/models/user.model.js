@@ -44,6 +44,7 @@ const UserSchema = new mongoose_1.Schema({
     otp: { type: String },
     auth_provider: { type: String, required: true },
     social_id: { type: String, /* required: true*/ },
+    designation: { type: String },
     bio: { type: String },
     age: { type: Number },
     gender: { type: String, enum: ["Male", "Female", "Other"] },
@@ -69,28 +70,28 @@ const UserSchema = new mongoose_1.Schema({
                 },
                 iconUrl: { type: String }
             }],
-        physicalInfo: {
-            name: {
-                type: String,
-                enum: ["Height", "Body Type"]
-            },
-            value: { type: Number },
-            iconUrl: { type: String }
-        },
-        hobbiesInterest: {
-            name: {
-                type: String,
-                enum: ["Loves Driving", "Music Lover", "Bookworm", "Foodie", "Dancer", "Gamer", "Yoga Enthusiast", "Meditation", "Cycling", "Vlogging / Content Creation", "Photography", "Camping"]
-            },
-            iconUrl: { type: String }
-        },
-        funIcebreakerTag: {
-            name: {
-                type: String,
-                enum: ["Always Down to Explore", "Never Says No to Coffee", "Carries Snacks Always", "Can Sleep Anywhere", "Travel DJ", "Map Reader", "The Planner Friend", "Chill Companion", "Loves Deep Conversations"]
-            },
-            iconUrl: { type: String }
-        }
+        physicalInfo: [{
+                name: {
+                    type: String,
+                    enum: ["Height", "Body Type",]
+                },
+                value: { type: String },
+                iconUrl: { type: String }
+            }],
+        hobbiesInterest: [{
+                name: {
+                    type: String,
+                    enum: ["Loves Driving", "Music Lover", "Bookworm", "Foodie", "Dancer", "Gamer", "Yoga Enthusiast", "Meditation", "Cycling", "Vlogging / Content Creation", "Photography", "Camping"]
+                },
+                iconUrl: { type: String }
+            }],
+        funIcebreakerTag: [{
+                name: {
+                    type: String,
+                    enum: ["Always Down to Explore", "Never Says No to Coffee", "Carries Snacks Always", "Can Sleep Anywhere", "Travel DJ", "Map Reader", "The Planner Friend", "Chill Companion", "Loves Deep Conversations"]
+                },
+                iconUrl: { type: String }
+            }],
     },
     profilePic: { type: String },
     location: {
