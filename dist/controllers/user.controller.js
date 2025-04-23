@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const user_model_1 = __importDefault(require("../models/user.model"));
 const trip_model_1 = __importDefault(require("../models/trip.model"));
+const swipe_model_1 = __importDefault(require("../models/swipe.model"));
 class UserController {
     static homepage(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -99,32 +100,6 @@ class UserController {
             }
         });
     }
-    // static async getUsers(req: Request, res: Response) {
-    //     // res.send('Hello World!');
-    //     try {
-    //         const { place, gender, age = '', language = [], interest = [], personality = [] } = req.body;
-    //         // now gender : [ 'Male', 'Female']
-    //         // Age : '22 - 28' or ''
-    //         // Language : ['English', 'Hindi'] or []
-    //         // Interest : ['x', 'y', 'z'] or []
-    //         // personalitytype : ['x', 'y', 'z'] or []
-    //         if (!place) {
-    //             const data = await Trip.find();
-    //             res.send(data);
-    //             return;
-    //         }
-    //         const filteredTripData = await Trip.find({ destination: { $regex: place, $options: 'i' } });
-    //         const userdata = await User.find({})
-    //         const alltrip = await Trip.find({ destination: { $regex: place, $options: 'i' } });
-    //         // console.log("All trip", alltrip);
-    //         res.send(alltrip);
-    //         return;
-    //     }
-    //     catch (error) {
-    //         res.send('Error');
-    //         return;
-    //     }
-    // }
     static createTrip(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -193,7 +168,9 @@ class UserController {
                     res.status(404).json({ message: 'user not found' });
                     return;
                 }
-                res.status(200).json({ message: user });
+                const sanitizedUser = user.toObject();
+                delete sanitizedUser.password;
+                res.status(200).json({ message: sanitizedUser });
                 return;
             }
             catch (error) {
@@ -245,6 +222,68 @@ class UserController {
                 user.travelStyle = travelStyle || user.travelStyle;
                 yield user.save();
                 res.status(200).json({ messsage: "user updated successfully" });
+                return;
+            }
+            catch (error) {
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
+    static bulkswiped(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const idsArray = req.body.data;
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                const user = yield user_model_1.default.findById(userId);
+                console.log("user is ", user);
+                if (!user) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                if (!Array.isArray(idsArray) || idsArray.length === 0) {
+                    res.status(400).json({ message: "Invalid input format" });
+                }
+                const formatted = idsArray.map((s) => ({
+                    swiper: s.swiper,
+                    target: s.target,
+                    direction: s.direction,
+                    createdAt: s.createdAt || new Date()
+                }));
+                const result = yield swipe_model_1.default.insertMany(formatted, { ordered: false });
+                res.status(201).json({ message: "Batch swipe saved", saved: result.length });
+                return;
+            }
+            catch (error) {
+                res.status(500).json({ message: "Failed to save Batch swipes" });
+                return;
+            }
+        });
+    }
+    static lastSwipe(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                // fetching last swipe from swipe collection and then deleting that last swipe when swipe back is used
+                const lastswipe = yield swipe_model_1.default.findOne({ swiper: userId })
+                    .sort({ createdAt: -1 })
+                    .populate("target");
+                if (!lastswipe) {
+                    res.status(400).json({ message: 'No last swipe found' });
+                    return;
+                }
+                if (lastswipe) {
+                    yield swipe_model_1.default.deleteOne({ _id: lastswipe._id });
+                }
+                res.status(200).json({ message: lastswipe });
                 return;
             }
             catch (error) {

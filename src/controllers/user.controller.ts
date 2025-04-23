@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import User from '../models/user.model';
 import Trip from '../models/trip.model';
-import { maxHeaderSize } from 'http';
+import Swipe from '../models/swipe.model';
+import {ISwipe} from '../models/swipe.model'
 
 class UserController {
 
@@ -95,38 +96,7 @@ class UserController {
         }
 
     }
-    // static async getUsers(req: Request, res: Response) {
-    //     // res.send('Hello World!');
-    //     try {
-    //         const { place, gender, age = '', language = [], interest = [], personality = [] } = req.body;
-
-    //         // now gender : [ 'Male', 'Female']
-    //         // Age : '22 - 28' or ''
-    //         // Language : ['English', 'Hindi'] or []
-    //         // Interest : ['x', 'y', 'z'] or []
-    //         // personalitytype : ['x', 'y', 'z'] or []
-    //         if (!place) {
-    //             const data = await Trip.find();
-    //             res.send(data);
-    //             return;
-    //         }
-
-    //         const filteredTripData = await Trip.find({ destination: { $regex: place, $options: 'i' } });
-
-    //         const userdata = await User.find({})
-
-    //         const alltrip = await Trip.find({ destination: { $regex: place, $options: 'i' } });
-
-    //         // console.log("All trip", alltrip);
-
-    //         res.send(alltrip);
-    //         return;
-    //     }
-    //     catch (error) {
-    //         res.send('Error');
-    //         return;
-    //     }
-    // }
+   
 
     static async createTrip(req: Request, res: Response) {
         try {
@@ -195,8 +165,9 @@ class UserController {
                 res.status(404).json({message:'user not found'});
                 return;
             }
-
-            res.status(200).json({message:user});
+            const sanitizedUser = user.toObject() as any;
+            delete sanitizedUser.password;
+            res.status(200).json({message:sanitizedUser});
             return;
 
         }
@@ -265,6 +236,76 @@ class UserController {
             return;
         }
     }
+
+    static async bulkswiped(req: Request, res: Response){
+        try{
+            const idsArray = req.body.data;
+            const userId = (req as any).user.id;
+            if(!userId){
+                res.status(400).json({message:'Invalid userId'});
+                return;
+            }
+
+            const user = await User.findById(userId);
+            console.log("user is ", user);
+            if(!user){
+                res.status(400).json({message:'Invalid userId'});
+                return;
+            }
+
+            if(!Array.isArray(idsArray) || idsArray.length === 0){
+                res.status(400).json({message: "Invalid input format"});
+            }
+
+            const formatted = (idsArray as ISwipe []).map((s) => ({
+                swiper : s.swiper,
+                target : s.target,
+                direction : s.direction,
+                createdAt : s.createdAt || new Date()
+            }));
+
+            const result = await Swipe.insertMany(formatted, {ordered: false});
+            res.status(201).json({message: "Batch swipe saved", saved : result.length});
+            return;
+
+        }
+        catch(error){
+            res.status(500).json({message: "Failed to save Batch swipes"});
+            return;
+        }
+    }
+
+    static async lastSwipe(req: Request, res: Response) {
+        try{
+            const userId = (req as any).user.id;
+            if(!userId){
+                res.status(400).json({message:'Invalid userId'});
+                return;
+            }
+
+            // fetching last swipe from swipe collection and then deleting that last swipe when swipe back is used
+            const lastswipe = await Swipe.findOne({swiper:userId})
+                .sort({createdAt: -1})
+                .populate("target");
+
+            if(!lastswipe){
+                res.status(400).json({message:'No last swipe found'});
+                return;
+            }
+
+            if(lastswipe){
+                await Swipe.deleteOne({_id: lastswipe._id});
+            }
+
+            res.status(200).json({message: lastswipe});
+            return;
+        }
+        catch(error){
+            res.status(500).json({message: 'Internal Server Error'});
+            return;
+        }
+    }
+
 }
 
 export default UserController;

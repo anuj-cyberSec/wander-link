@@ -15,4 +15,6 @@ router.post('/updateUser', authenticator_1.default, user_controller_1.default.up
 router.get('/getProfile', authenticator_1.default, user_controller_1.default.getProfile);
 router.post('/create-profile', authenticator_1.default, user_controller_1.default.createProfile);
 // router.post('/updateProfile', authentication, UserController.updateProfile);
+router.post('/batch-upload', authenticator_1.default, user_controller_1.default.bulkswiped);
+router.get('/last-swipe', authenticator_1.default, user_controller_1.default.lastSwipe);
 exports.default = router;
