@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import User from '../models/user.model';
 import Trip from '../models/trip.model';
 import Swipe from '../models/swipe.model';
@@ -299,6 +300,70 @@ class UserController {
 
             res.status(200).json({message: lastswipe});
             return;
+        }
+        catch(error){
+            res.status(500).json({message: 'Internal Server Error'});
+            return;
+        }
+    }
+
+    // fetch a user(his homepage trip) based on objectid
+
+    static async fetchTrip(req: Request, res: Response){
+        try{
+            const tripId = req.body.id;
+
+
+            if(!tripId){
+                console.log("No userid found");
+                res.status(400).json({message:'Invalid userId'});
+                return;
+
+            }
+
+            const homepageUserdata = await Trip.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(tripId) // Make sure tripId is casted properly
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'userData',
+                        localField: 'creator',
+                        foreignField: '_id',
+                        as: 'creator'
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$creator',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        startDate: 1,
+                        endDate: 1,
+                        destination: 1,
+                        travellingFrom: 1,
+                        description: 1,
+                        tripVibe: 1,
+                        'creator._id': 1,
+                        'creator.name': 1,
+                        'creator.profilePic': 1,
+                        'creator.gender': 1,
+                        'creator.age': 1,
+                        'creator.aboutMe.personality': 1
+                    }
+                }
+            ]);
+            
+            console.log("homepage user data is ", homepageUserdata);
+            res.status(200).json(homepageUserdata);
+            return;
+
         }
         catch(error){
             res.status(500).json({message: 'Internal Server Error'});

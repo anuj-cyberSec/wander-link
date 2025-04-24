@@ -9,7 +9,7 @@ export interface ISwipe extends Document {
 
 const swipeSchema : Schema<ISwipe> = new Schema({
     swiper: {type: Schema.Types.ObjectId, ref: "User", required: true},
-    target: {type: Schema.Types.ObjectId, ref : "User", required: true},
+    target: {type: Schema.Types.ObjectId, ref : "Trip", required: true},
     direction: {type: String, enum: ["left", "right"], required: true},
     createdAt: {type: Date, default: Date.now}
 },

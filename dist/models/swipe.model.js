@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const swipeSchema = new mongoose_1.Schema({
     swiper: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
-    target: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
+    target: { type: mongoose_1.Schema.Types.ObjectId, ref: "Trip", required: true },
     direction: { type: String, enum: ["left", "right"], required: true },
     createdAt: { type: Date, default: Date.now }
 }, {

@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const trip_model_1 = __importDefault(require("../models/trip.model"));
 const swipe_model_1 = __importDefault(require("../models/swipe.model"));
@@ -284,6 +285,64 @@ class UserController {
                     yield swipe_model_1.default.deleteOne({ _id: lastswipe._id });
                 }
                 res.status(200).json({ message: lastswipe });
+                return;
+            }
+            catch (error) {
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
+    // fetch a user(his homepage trip) based on objectid
+    static fetchTrip(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const tripId = req.body.id;
+                if (!tripId) {
+                    console.log("No userid found");
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                const homepageUserdata = yield trip_model_1.default.aggregate([
+                    {
+                        $match: {
+                            _id: new mongoose_1.default.Types.ObjectId(tripId) // Make sure tripId is casted properly
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'userData',
+                            localField: 'creator',
+                            foreignField: '_id',
+                            as: 'creator'
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$creator',
+                            preserveNullAndEmptyArrays: true
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            startDate: 1,
+                            endDate: 1,
+                            destination: 1,
+                            travellingFrom: 1,
+                            description: 1,
+                            tripVibe: 1,
+                            'creator._id': 1,
+                            'creator.name': 1,
+                            'creator.profilePic': 1,
+                            'creator.gender': 1,
+                            'creator.age': 1,
+                            'creator.aboutMe.personality': 1
+                        }
+                    }
+                ]);
+                console.log("homepage user data is ", homepageUserdata);
+                res.status(200).json(homepageUserdata);
                 return;
             }
             catch (error) {
