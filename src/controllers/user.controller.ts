@@ -88,7 +88,7 @@ class UserController {
                 console.log("Sample trip creator:", trips[0].creator);
             }
 
-            res.json(trips);
+            res.status(200).json(trips);
             return;
         }
         catch (error) {
@@ -248,7 +248,8 @@ class UserController {
             }
 
             const user = await User.findById(userId);
-            console.log("user is ", user);
+            // console.log("user is ", user);
+            console.log("ids array are", idsArray)
             if(!user){
                 res.status(400).json({message:'Invalid userId'});
                 return;
