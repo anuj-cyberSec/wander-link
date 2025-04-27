@@ -178,11 +178,14 @@ class AuthController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { email, password } = req.body;
+                console.log("email is ", email);
+                console.log("password is ", password);
                 if (!email || !password) {
                     res.status(400).send('Please provide email and password');
                     return;
                 }
                 let user = yield user_model_1.default.findOne({ email: email });
+                console.log("user is ", user);
                 if (!user) {
                     res.status(400).send('User not found');
                     return;

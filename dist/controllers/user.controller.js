@@ -101,6 +101,83 @@ class UserController {
             }
         });
     }
+    // static async homepage(req: Request, res: Response) {
+    //     try {
+    //         const userId = (req as any).user.id;
+    //         if (!userId) {
+    //             res.status(400).json({ error: 'Invalid userid' });
+    //             return;
+    //         }
+    //         const user = await User.findById(userId);
+    //         console.log("user id is ", user?.id);
+    //         if (!user || !user.location || !user.location.coordinates) {
+    //             res.status(400).json({ error: 'User location not found' });
+    //             return;
+    //         }
+    //         console.log("user location is ", user.location.coordinates);
+    //         const maxDistanceInMeters = 1000000;
+    //         // Step 1: Find nearby users first
+    //         const nearbyUsers = await User.find({
+    //             location: {
+    //                 $near: {
+    //                     $geometry: {
+    //                         type: "Point",
+    //                         coordinates: user.location.coordinates
+    //                     },
+    //                     $maxDistance: maxDistanceInMeters
+    //                 }
+    //             }
+    //         }).select('_id');
+    //         console.log(`Found ${nearbyUsers.length} nearby users`);
+    //         // Step 2: Get the IDs of nearby users
+    //         const nearbyUserIds = nearbyUsers.map(u => u._id);
+    //         // Step 3: Find trips created by these users
+    //         const trips = await Trip.aggregate([
+    //             {
+    //                 $match: {
+    //                     creator: { $in: nearbyUserIds }
+    //                 }
+    //             },
+    //             {
+    //                 $lookup: {
+    //                     from: "userData",
+    //                     localField: "creator",
+    //                     foreignField: "_id",
+    //                     as: "creator"
+    //                 }
+    //             },
+    //             {
+    //                 $unwind: {
+    //                     path: "$creator",
+    //                     preserveNullAndEmptyArrays: true
+    //                 }
+    //             },
+    //             {
+    //                 $project: {
+    //                     _id: 1,
+    //                     startDate: 1,
+    //                     endDate: 1,
+    //                     destination: 1,
+    //                     travellingFrom: 1,
+    //                     description: 1,
+    //                     tripVibe: 1,
+    //                     "creator._id": 1,
+    //                     "creator.name": 1,
+    //                     "creator.profilePic": 1,
+    //                     "creator.gender": 1,
+    //                     "creator.age": 1,
+    //                     "creator.aboutMe.personality": 1
+    //                 }
+    //             }
+    //         ]);
+    //         console.log(`Found ${trips.length} trips from nearby users`);
+    //         res.status(200).json(trips);
+    //     }
+    //     catch (error) {
+    //         console.error("Aggregation Error:", error);
+    //         res.status(500).json({ error: 'Internal server error' });
+    //     }
+    // }
     static createTrip(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -266,35 +343,75 @@ class UserController {
             }
         });
     }
+    // static async lastSwipe(req: Request, res: Response) {
+    //     try{
+    //         const userId = (req as any).user.id;
+    //         if(!userId){
+    //             res.status(400).json({message:'Invalid userId'});
+    //             return;
+    //         }
+    //         // fetching last swipe from swipe collection and then deleting that last swipe when swipe back is used
+    //         const lastswipe = await Swipe.findOne({swiper:userId})
+    //             .sort({createdAt: -1})
+    //             .populate("target");
+    //         if(!lastswipe){
+    //             res.status(400).json({message:'No last swipe found'});
+    //             return;
+    //         }
+    //         if(lastswipe){
+    //             await Swipe.deleteOne({_id: lastswipe._id});
+    //         }
+    //         // just like homepage api we need to return data
+    //         // popolate target with trip collection and creator with user collection
+    //         res.status(200).json({message: lastswipe});
+    //         return;
+    //     }
+    //     catch(error){
+    //         res.status(500).json({message: 'Internal Server Error'});
+    //         return;
+    //     }
+    // }
+    // fetch a user(his homepage trip) based on objectid
     static lastSwipe(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const userId = req.user.id;
                 if (!userId) {
-                    res.status(400).json({ message: 'Invalid userId' });
-                    return;
+                    return res.status(400).json({ message: 'Invalid userId' });
                 }
-                // fetching last swipe from swipe collection and then deleting that last swipe when swipe back is used
+                // Fetch the last swipe and populate the target (Trip) and creator (User)
                 const lastswipe = yield swipe_model_1.default.findOne({ swiper: userId })
                     .sort({ createdAt: -1 })
-                    .populate("target");
+                    .populate({
+                    path: 'target', // Populate the target (which is a Trip)
+                    populate: {
+                        path: 'creator', // Populate the creator of the trip (User)
+                        select: 'name profilePic gender age aboutMe' // Select the fields you need from User
+                    }
+                });
                 if (!lastswipe) {
-                    res.status(400).json({ message: 'No last swipe found' });
-                    return;
+                    return res.status(400).json({ message: 'No last swipe found' });
                 }
-                if (lastswipe) {
-                    yield swipe_model_1.default.deleteOne({ _id: lastswipe._id });
-                }
-                res.status(200).json({ message: lastswipe });
-                return;
+                // Optionally, delete the swipe if you're handling swipe-back behavior
+                yield swipe_model_1.default.deleteOne({ _id: lastswipe._id });
+                // Create the response in the same format as homepage API
+                const response = {
+                    _id: lastswipe._id,
+                    swiper: lastswipe.swiper,
+                    target: lastswipe.target, // The populated target (Trip) with the creator's data
+                    direction: lastswipe.direction,
+                    createdAt: lastswipe.createdAt,
+                    __v: lastswipe.__v
+                };
+                // Return the response with the populated trip and creator
+                res.status(200).json({ message: response });
             }
             catch (error) {
-                res.status(500).json({ message: 'Internal Server Error' });
-                return;
+                console.error("Error in lastSwipe:", error);
+                return res.status(500).json({ message: 'Internal Server Error' });
             }
         });
     }
-    // fetch a user(his homepage trip) based on objectid
     static fetchTrip(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
