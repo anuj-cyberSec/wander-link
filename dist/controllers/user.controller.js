@@ -331,6 +331,7 @@ class UserController {
                     swiper: s.swiper,
                     target: s.target,
                     direction: s.direction,
+                    creator: user._id,
                     createdAt: s.createdAt || new Date()
                 }));
                 const result = yield swipe_model_1.default.insertMany(formatted, { ordered: false });
@@ -377,11 +378,17 @@ class UserController {
             try {
                 const userId = req.user.id;
                 if (!userId) {
-                    return res.status(400).json({ message: 'Invalid userId' });
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
                 }
-                // Fetch the last swipe and populate the target (Trip) and creator (User)
-                const lastswipe = yield swipe_model_1.default.findOne({ swiper: userId })
-                    .sort({ createdAt: -1 })
+                // Fetch the last swipe whose approved do not exist or approved is false and populate the target (Trip) and creator (User)
+                const lastswipe = yield swipe_model_1.default.findOne({ swiper: userId,
+                    $or: [
+                        { accepted: { $exists: false } }, // No accepted field
+                        { accepted: false } // accepted is false
+                    ]
+                })
+                    .sort({ createdAt: 1 })
                     .populate({
                     path: 'target', // Populate the target (which is a Trip)
                     populate: {
@@ -390,7 +397,8 @@ class UserController {
                     }
                 });
                 if (!lastswipe) {
-                    return res.status(400).json({ message: 'No last swipe found' });
+                    res.status(400).json({ message: 'No last swipe found' });
+                    return;
                 }
                 // Optionally, delete the swipe if you're handling swipe-back behavior
                 yield swipe_model_1.default.deleteOne({ _id: lastswipe._id });
@@ -405,10 +413,12 @@ class UserController {
                 };
                 // Return the response with the populated trip and creator
                 res.status(200).json({ message: response });
+                return;
             }
             catch (error) {
                 console.error("Error in lastSwipe:", error);
-                return res.status(500).json({ message: 'Internal Server Error' });
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
             }
         });
     }
@@ -424,12 +434,12 @@ class UserController {
                 const homepageUserdata = yield trip_model_1.default.aggregate([
                     {
                         $match: {
-                            _id: new mongoose_1.default.Types.ObjectId(tripId) // Make sure tripId is casted properly
+                            _id: new mongoose_1.default.Types.ObjectId(tripId) // Ensure tripId is casted properly
                         }
                     },
                     {
                         $lookup: {
-                            from: 'userData',
+                            from: 'users', // Correct collection name for users
                             localField: 'creator',
                             foreignField: '_id',
                             as: 'creator'
@@ -464,6 +474,127 @@ class UserController {
                 return;
             }
             catch (error) {
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
+    // now this api will fetch all those trip(homepage like) which this user has swiped and creator has approved
+    static fetchApprovedTrip(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                // fetching all the swipes of this user whose approved is true
+                const swipes = yield swipe_model_1.default.find({ swiper: userId, accepted: true })
+                    .populate({
+                    path: 'target', // Populate the target (which is a Trip)
+                    populate: {
+                        path: 'creator', // Populate the creator of the trip (User)
+                        select: 'name profilePic gender age aboutMe' // Select the fields you need from User
+                    }
+                })
+                    .sort({ createdAt: -1 }); // Sort by createdAt in descending order
+                console.log("swipes are ", swipes);
+                if (!swipes || swipes.length === 0) {
+                    res.status(400).json({ message: 'No swipes found' });
+                    return;
+                }
+                const response = swipes.map((swipe) => ({
+                    _id: swipe._id,
+                    swiper: swipe.swiper,
+                    target: swipe.target, // The populated target (Trip) with the creator's data
+                }));
+                res.status(200).json({ message: response });
+                return;
+            }
+            catch (error) {
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
+    // this api --> the user's trip which others have swiped will be shown here so that user can approve or reject
+    static fetchTripForApproval(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                // console.log("user id is ", userId);
+                // now search with user._id in swipe collection and should not include approved false and then populate target with trip collection and swiper with user collection
+                const swipes = yield swipe_model_1.default.find({ creator: userId, direction: "right", accepted: { $exists: false }, })
+                    .populate({
+                    path: 'target', // Populate the target (which is a Trip)
+                    // populate: {
+                    //     path: 'creator', // Populate the swiper of the trip (User)
+                    //     select: 'name profilePic gender age aboutMe' // Select the fields you need from User
+                    // }
+                })
+                    .populate({
+                    path: 'swiper', // Populate the swiper (User)
+                    select: 'name profilePic gender age aboutMe' // Select the fields you need from User
+                })
+                    .sort({ createdAt: -1 }); // Sort by createdAt in descending order
+                console.log("swipes are ", swipes);
+                if (!swipes || swipes.length === 0) {
+                    res.status(400).json({ message: 'No swipes found' });
+                    return;
+                }
+                const response = swipes.map((swipe) => ({
+                    _id: swipe._id,
+                    swiper: swipe.swiper,
+                    target: swipe.target, // The populated target (Trip) with the creator's data
+                }));
+                res.status(200).json({ message: response });
+                return;
+            }
+            catch (error) {
+                console.error("Error in fetchTripForApproval:", error);
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
+    static approveTrip(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // api to approve trip and also store that swiper from swipe to trip participants
+            try {
+                const tripObjectId = req.body.tripObjectId;
+                const approval = req.body.approval;
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                if (!tripObjectId || typeof approval !== 'boolean') {
+                    res.status(400).json({ message: 'Invalid tripObjectId or approval' });
+                    return;
+                }
+                // update swipe collection with accepted true and fetch swiper id and then update trip collection with participants
+                const swipe = yield swipe_model_1.default.findByIdAndUpdate(tripObjectId, { accepted: approval }, { new: true });
+                if (!swipe) {
+                    res.status(400).json({ message: 'Swipe not found' });
+                    return;
+                }
+                const tripId = swipe.target;
+                const swiperId = swipe.swiper;
+                // update trip collection with participants
+                const trip = yield trip_model_1.default.findByIdAndUpdate(tripId, { $addToSet: { participants: swiperId } }, { new: true });
+                if (!trip) {
+                    res.status(400).json({ message: 'Trip not found' });
+                    return;
+                }
+                res.status(200).json({ message: 'Trip approved successfully' });
+                return;
+            }
+            catch (error) {
+                console.error("Error in approveTrip:", error);
                 res.status(500).json({ message: 'Internal Server Error' });
                 return;
             }

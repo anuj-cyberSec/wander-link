@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import User from '../models/user.model';
 import Trip from '../models/trip.model';
 import Swipe from '../models/swipe.model';
-import {ISwipe} from '../models/swipe.model'
+import { ISwipe } from '../models/swipe.model'
 
 class UserController {
 
@@ -105,18 +105,18 @@ class UserController {
     //             res.status(400).json({ error: 'Invalid userid' });
     //             return;
     //         }
-            
+
     //         const user = await User.findById(userId);
     //         console.log("user id is ", user?.id);
-            
+
     //         if (!user || !user.location || !user.location.coordinates) {
     //             res.status(400).json({ error: 'User location not found' });
     //             return;
     //         }
-    
+
     //         console.log("user location is ", user.location.coordinates);
     //         const maxDistanceInMeters = 1000000;
-    
+
     //         // Step 1: Find nearby users first
     //         const nearbyUsers = await User.find({
     //             location: {
@@ -129,12 +129,12 @@ class UserController {
     //                 }
     //             }
     //         }).select('_id');
-    
+
     //         console.log(`Found ${nearbyUsers.length} nearby users`);
-            
+
     //         // Step 2: Get the IDs of nearby users
     //         const nearbyUserIds = nearbyUsers.map(u => u._id);
-            
+
     //         // Step 3: Find trips created by these users
     //         const trips = await Trip.aggregate([
     //             {
@@ -174,7 +174,7 @@ class UserController {
     //                 }
     //             }
     //         ]);
-    
+
     //         console.log(`Found ${trips.length} trips from nearby users`);
     //         res.status(200).json(trips);
     //     }
@@ -183,8 +183,8 @@ class UserController {
     //         res.status(500).json({ error: 'Internal server error' });
     //     }
     // }
-    
-   
+
+
 
     static async createTrip(req: Request, res: Response) {
         try {
@@ -243,45 +243,45 @@ class UserController {
 
             const userId = (req as any).user.id;
             if (!userId) {
-                res.status(400).json({message:'Invalid userid'});
+                res.status(400).json({ message: 'Invalid userid' });
                 return;
             }
 
             console.log(userId);
             const user = await User.findById(userId);
             if (!user) {
-                res.status(404).json({message:'user not found'});
+                res.status(404).json({ message: 'user not found' });
                 return;
             }
             const sanitizedUser = user.toObject() as any;
             delete sanitizedUser.password;
-            res.status(200).json({message:sanitizedUser});
+            res.status(200).json({ message: sanitizedUser });
             return;
 
         }
         catch (error) {
-            res.status(500).json({message: 'Internal Server Error'});
+            res.status(500).json({ message: 'Internal Server Error' });
             return;
         }
     }
 
-    
+
 
     static async createProfile(req: Request, res: Response) {
-        try{
-            let {name, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, profilePic, location, languageSpoken, budget, travelStyle } = req.body;
+        try {
+            let { name, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, profilePic, location, languageSpoken, budget, travelStyle } = req.body;
 
 
             const userId = (req as any).user.id;
             if (!userId) {
-                res.status(400).json({message:'Invalid userId'});
+                res.status(400).json({ message: 'Invalid userId' });
                 return;
             }
-            
+
             const user = await User.findById(userId);
             console.log("user is ", user);
             if (!user) {
-                res.status(404).json({message:'user not found'});
+                res.status(404).json({ message: 'user not found' });
                 return;
             }
 
@@ -289,7 +289,7 @@ class UserController {
             user.bio = bio || user.bio;
             user.age = age || user.age;
             user.gender = gender || user.gender;
-            
+
             // Initialize aboutMe if it doesn't exist
             if (!user.aboutMe) {
                 user.aboutMe = {
@@ -301,7 +301,7 @@ class UserController {
                     funIcebreakerTag: []
                 };
             }
-            
+
             user.aboutMe.personality = personality || user.aboutMe.personality;
             user.aboutMe.travelPreference = travelPreference || user.aboutMe.travelPreference;
             user.aboutMe.lifestyleChoice = lifestyleChoice || user.aboutMe.lifestyleChoice;
@@ -315,51 +315,52 @@ class UserController {
             user.travelStyle = travelStyle || user.travelStyle;
 
             await user.save();
-            res.status(200).json({messsage:"user updated successfully"});
+            res.status(200).json({ messsage: "user updated successfully" });
             return;
-            
+
         }
-        catch(error){
-            res.status(500).json({message: 'Internal Server Error'});
+        catch (error) {
+            res.status(500).json({ message: 'Internal Server Error' });
             return;
         }
     }
 
-    static async bulkswiped(req: Request, res: Response){
-        try{
+    static async bulkswiped(req: Request, res: Response) {
+        try {
             const idsArray = req.body.data;
             const userId = (req as any).user.id;
-            if(!userId){
-                res.status(400).json({message:'Invalid userId'});
+            if (!userId) {
+                res.status(400).json({ message: 'Invalid userId' });
                 return;
             }
 
             const user = await User.findById(userId);
             // console.log("user is ", user);
             console.log("ids array are", idsArray)
-            if(!user){
-                res.status(400).json({message:'Invalid userId'});
+            if (!user) {
+                res.status(400).json({ message: 'Invalid userId' });
                 return;
             }
 
-            if(!Array.isArray(idsArray) || idsArray.length === 0){
-                res.status(400).json({message: "Invalid input format"});
+            if (!Array.isArray(idsArray) || idsArray.length === 0) {
+                res.status(400).json({ message: "Invalid input format" });
             }
 
-            const formatted = (idsArray as ISwipe []).map((s) => ({
-                swiper : s.swiper,
-                target : s.target,
-                direction : s.direction,
-                createdAt : s.createdAt || new Date()
+            const formatted = (idsArray as ISwipe[]).map((s) => ({
+                swiper: s.swiper,
+                target: s.target,
+                direction: s.direction,
+                creator : user._id,
+                createdAt: s.createdAt || new Date()
             }));
 
-            const result = await Swipe.insertMany(formatted, {ordered: false});
-            res.status(201).json({message: "Batch swipe saved", saved : result.length});
+            const result = await Swipe.insertMany(formatted, { ordered: false });
+            res.status(201).json({ message: "Batch swipe saved", saved: result.length });
             return;
 
         }
-        catch(error){
-            res.status(500).json({message: "Failed to save Batch swipes"});
+        catch (error) {
+            res.status(500).json({ message: "Failed to save Batch swipes" });
             return;
         }
     }
@@ -388,7 +389,7 @@ class UserController {
     //         // just like homepage api we need to return data
     //         // popolate target with trip collection and creator with user collection
 
-            
+
 
     //         res.status(200).json({message: lastswipe});
     //         return;
@@ -406,12 +407,20 @@ class UserController {
         try {
             const userId = (req as any).user.id;
             if (!userId) {
-                return res.status(400).json({ message: 'Invalid userId' });
+                res.status(400).json({ message: 'Invalid userId' });
+                return;
             }
-    
-            // Fetch the last swipe and populate the target (Trip) and creator (User)
-            const lastswipe = await Swipe.findOne({ swiper: userId })
-                .sort({ createdAt: -1 })
+
+            // Fetch the last swipe whose approved do not exist or approved is false and populate the target (Trip) and creator (User)
+            const lastswipe = await Swipe.findOne({ swiper: userId, 
+                
+                    $or: [
+                        { accepted: { $exists: false } }, // No accepted field
+                        { accepted: false } // accepted is false
+                    ]
+                
+             })
+                .sort({ createdAt: 1 })
                 .populate({
                     path: 'target', // Populate the target (which is a Trip)
                     populate: {
@@ -419,14 +428,15 @@ class UserController {
                         select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                     }
                 });
-    
+
             if (!lastswipe) {
-                return res.status(400).json({ message: 'No last swipe found' });
+                res.status(400).json({ message: 'No last swipe found' });
+                return;
             }
-    
+
             // Optionally, delete the swipe if you're handling swipe-back behavior
             await Swipe.deleteOne({ _id: lastswipe._id });
-    
+
             // Create the response in the same format as homepage API
             const response = {
                 _id: lastswipe._id,
@@ -436,23 +446,25 @@ class UserController {
                 createdAt: lastswipe.createdAt,
                 __v: lastswipe.__v
             };
-    
+
             // Return the response with the populated trip and creator
             res.status(200).json({ message: response });
+            return;
         } catch (error) {
             console.error("Error in lastSwipe:", error);
-            return res.status(500).json({ message: 'Internal Server Error' });
+            res.status(500).json({ message: 'Internal Server Error' });
+            return;
         }
     }
-    
-    static async fetchTrip(req: Request, res: Response){
-        try{
+
+    static async fetchTrip(req: Request, res: Response) {
+        try {
             const tripId = req.body.id;
 
 
-            if(!tripId){
+            if (!tripId) {
                 console.log("No userid found");
-                res.status(400).json({message:'Invalid userId'});
+                res.status(400).json({ message: 'Invalid userId' });
                 return;
 
             }
@@ -460,12 +472,12 @@ class UserController {
             const homepageUserdata = await Trip.aggregate([
                 {
                     $match: {
-                        _id: new mongoose.Types.ObjectId(tripId) // Make sure tripId is casted properly
+                        _id: new mongoose.Types.ObjectId(tripId) // Ensure tripId is casted properly
                     }
                 },
                 {
                     $lookup: {
-                        from: 'userData',
+                        from: 'users', // Correct collection name for users
                         localField: 'creator',
                         foreignField: '_id',
                         as: 'creator'
@@ -495,13 +507,142 @@ class UserController {
                     }
                 }
             ]);
-            
+
             console.log("homepage user data is ", homepageUserdata);
             res.status(200).json(homepageUserdata);
             return;
 
         }
+        catch (error) {
+            res.status(500).json({ message: 'Internal Server Error' });
+            return;
+        }
+    }
+
+    // now this api will fetch all those trip(homepage like) which this user has swiped and creator has approved
+    static async fetchApprovedTrip(req: Request, res: Response) {
+        try {
+            const userId = (req as any).user.id;
+            if (!userId) {
+                res.status(400).json({ message: 'Invalid userId' });
+                return;
+            }
+
+            // fetching all the swipes of this user whose approved is true
+            const swipes = await Swipe.find({ swiper: userId, accepted: true })
+                .populate({
+                    path: 'target', // Populate the target (which is a Trip)
+                    populate: {
+                        path: 'creator', // Populate the creator of the trip (User)
+                        select: 'name profilePic gender age aboutMe' // Select the fields you need from User
+                    }
+                })
+                .sort({ createdAt: -1 }); // Sort by createdAt in descending order
+                console.log("swipes are ", swipes);
+            if (!swipes || swipes.length === 0) {
+                res.status(400).json({ message: 'No swipes found' });
+                return;
+            }
+            const response = swipes.map((swipe) => ({
+                _id: swipe._id,
+                swiper: swipe.swiper,
+                target: swipe.target, // The populated target (Trip) with the creator's data
+
+            }));
+            res.status(200).json({ message: response });
+            return;
+        }
+        catch (error) {
+            res.status(500).json({ message: 'Internal Server Error' });
+            return;
+        }
+    }
+
+
+    // this api --> the user's trip which others have swiped will be shown here so that user can approve or reject
+    static async fetchTripForApproval(req: Request, res: Response) {
+        try{
+            const userId = (req as any).user.id;
+            if (!userId) {
+                res.status(400).json({ message: 'Invalid userId' });
+                return;
+            }
+            
+            // console.log("user id is ", userId);
+            // now search with user._id in swipe collection and should not include approved false and then populate target with trip collection and swiper with user collection
+            const swipes = await Swipe.find({ creator: userId, direction: "right", accepted: { $exists: false },  })
+                .populate({
+                    path: 'target', // Populate the target (which is a Trip)
+                    // populate: {
+                    //     path: 'creator', // Populate the swiper of the trip (User)
+                    //     select: 'name profilePic gender age aboutMe' // Select the fields you need from User
+                    // }
+                })
+                .populate({
+                    path: 'swiper', // Populate the swiper (User)
+                    select: 'name profilePic gender age aboutMe' // Select the fields you need from User
+                })
+                .sort({ createdAt: -1 }); // Sort by createdAt in descending order
+            
+            
+                console.log("swipes are ", swipes);
+            if (!swipes || swipes.length === 0) {
+                res.status(400).json({ message: 'No swipes found' });
+                return;
+            }
+            const response = swipes.map((swipe) => ({
+                _id: swipe._id,
+                swiper: swipe.swiper,
+                target: swipe.target, // The populated target (Trip) with the creator's data
+
+            }));
+            res.status(200).json({ message: response });
+            return;
+                
+        }
         catch(error){
+            console.error("Error in fetchTripForApproval:", error);
+            res.status(500).json({message: 'Internal Server Error'});
+            return;
+        }
+    }
+
+    static async approveTrip(req: Request, res: Response) {
+        // api to approve trip and also store that swiper from swipe to trip participants
+        try{
+            const tripObjectId = req.body.tripObjectId;
+            const approval = req.body.approval;
+            const userId = (req as any).user.id;
+            if (!userId) {
+
+                res.status(400).json({ message: 'Invalid userId' });
+                return;
+            }
+            if (!tripObjectId || typeof approval !== 'boolean') {
+                res.status(400).json({ message: 'Invalid tripObjectId or approval' });
+                return;
+            }
+
+            // update swipe collection with accepted true and fetch swiper id and then update trip collection with participants
+            const swipe = await Swipe.findByIdAndUpdate(tripObjectId, { accepted: approval }, { new: true });
+            if (!swipe) {
+                res.status(400).json({ message: 'Swipe not found' });
+                return;
+            }
+            const tripId = swipe.target;
+            const swiperId = swipe.swiper;
+
+            // update trip collection with participants
+            const trip = await Trip.findByIdAndUpdate(tripId, { $addToSet: { participants: swiperId } }, { new: true });
+            if (!trip) {
+                res.status(400).json({ message: 'Trip not found' });
+                return;
+            }
+            res.status(200).json({ message: 'Trip approved successfully' });
+            return;
+        }
+        catch(error){
+            console.error("Error in approveTrip:", error);
             res.status(500).json({message: 'Internal Server Error'});
             return;
         }

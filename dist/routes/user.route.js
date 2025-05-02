@@ -18,4 +18,7 @@ router.post('/create-profile', authenticator_1.default, user_controller_1.defaul
 router.post('/batch-upload', authenticator_1.default, user_controller_1.default.bulkswiped);
 router.get('/last-swipe', authenticator_1.default, user_controller_1.default.lastSwipe);
 router.post('/fetch-trip', authenticator_1.default, user_controller_1.default.fetchTrip);
+router.get('/get-approved-trips', authenticator_1.default, user_controller_1.default.fetchApprovedTrip);
+router.get('/wanderer-approval', authenticator_1.default, user_controller_1.default.fetchTripForApproval);
+router.post('/approve-trip', authenticator_1.default, user_controller_1.default.approveTrip);
 exports.default = router;

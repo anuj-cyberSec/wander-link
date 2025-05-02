@@ -5,13 +5,17 @@ export interface ISwipe extends Document {
     target : Schema.Types.ObjectId;
     direction : "left" | "right";
     createdAt : Date;
+    accepted : boolean;
+    creator : Schema.Types.ObjectId;
 }
 
 const swipeSchema : Schema<ISwipe> = new Schema({
     swiper: {type: Schema.Types.ObjectId, ref: "User", required: true},
     target: {type: Schema.Types.ObjectId, ref : "Trip", required: true},
     direction: {type: String, enum: ["left", "right"], required: true},
-    createdAt: {type: Date, default: Date.now}
+    createdAt: {type: Date, default: Date.now},
+    accepted: {type: Boolean},
+    creator: {type: Schema.Types.ObjectId, ref: "User", required: true}
 },
 {
  collection: "swipeData"
