@@ -44,6 +44,8 @@ class AuthController {
     static async register(req: Request, res: Response) {
         try {
             const {email, name, photo } = req.body;
+            const auth_provider = req.body.auth_provider || "email";
+            const social_id = req.body.social_id || "";
             
 
             if(!email || !name || !photo){
@@ -56,6 +58,8 @@ class AuthController {
                     name: name,
                     email: email,
                     profilePic: photo,
+                    auth_provider : auth_provider,
+                    social_id : social_id,
                     
                 })
                 await user.save();

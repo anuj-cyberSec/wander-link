@@ -565,7 +565,7 @@ class UserController {
         return __awaiter(this, void 0, void 0, function* () {
             // api to approve trip and also store that swiper from swipe to trip participants
             try {
-                const tripObjectId = req.body.tripObjectId;
+                const tripObjectId = req.body.tripObjectId; //it is actually swipe object id
                 const approval = req.body.approval;
                 const userId = req.user.id;
                 if (!userId) {

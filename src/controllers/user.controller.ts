@@ -610,7 +610,7 @@ class UserController {
     static async approveTrip(req: Request, res: Response) {
         // api to approve trip and also store that swiper from swipe to trip participants
         try{
-            const tripObjectId = req.body.tripObjectId;
+            const tripObjectId = req.body.tripObjectId;   //it is actually swipe object id
             const approval = req.body.approval;
             const userId = (req as any).user.id;
             if (!userId) {

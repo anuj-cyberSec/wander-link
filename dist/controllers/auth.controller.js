@@ -58,6 +58,7 @@ class AuthController {
                         name: name,
                         email: email,
                         profilePic: photo,
+                        auth_provider: "google",
                     });
                     yield user.save();
                     const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
