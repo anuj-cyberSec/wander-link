@@ -48,6 +48,8 @@ class AuthController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { email, name, photo } = req.body;
+                const auth_provider = req.body.auth_provider || "email";
+                const social_id = req.body.social_id || "";
                 if (!email || !name || !photo) {
                     res.send('Please provide email, name and photo');
                     return;
@@ -58,7 +60,8 @@ class AuthController {
                         name: name,
                         email: email,
                         profilePic: photo,
-                        auth_provider: "google",
+                        auth_provider: auth_provider,
+                        social_id: social_id,
                     });
                     yield user.save();
                     const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });

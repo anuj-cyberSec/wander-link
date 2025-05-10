@@ -457,6 +457,7 @@ class UserController {
         }
     }
 
+    
     static async fetchTrip(req: Request, res: Response) {
         try {
             const tripId = req.body.id;
@@ -549,7 +550,7 @@ class UserController {
                 target: swipe.target, // The populated target (Trip) with the creator's data
 
             }));
-            res.status(200).json({ message: response });
+            res.status(200).json({ response });
             return;
         }
         catch (error) {
