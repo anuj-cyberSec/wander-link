@@ -18,7 +18,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const path_1 = __importDefault(require("path"));
-const email_utils_1 = __importDefault(require("../utils/email.utils"));
+const email_utils_1 = require("../utils/email.utils");
 dotenv_1.default.config({ path: path_1.default.join(__dirname, '../../.env') });
 const secret = process.env.JWT_SECRET;
 if (!secret) {
@@ -99,8 +99,8 @@ class AuthController {
                         yield user.save();
                         const to = email;
                         const subject = 'OTP for WanderLink registration';
-                        const html = `Your OTP is ${otp}`;
-                        yield (0, email_utils_1.default)(to, subject, html);
+                        const html = (0, email_utils_1.generateOtpEmailTemplate)(otp);
+                        yield (0, email_utils_1.sendEmail)(to, subject, html);
                         res.send('OTP sent to email');
                         return;
                     }
@@ -128,11 +128,13 @@ class AuthController {
                 // creating new user with otp set
                 const to = email;
                 const subject = 'OTP for WanderLink registration';
-                const html = `Your OTP is ${otp}`;
-                yield (0, email_utils_1.default)(to, subject, html);
+                // const html = `Your OTP is ${otp}`;
+                const html = (0, email_utils_1.generateOtpEmailTemplate)(otp);
+                yield (0, email_utils_1.sendEmail)(to, subject, html);
                 const newUser = new user_model_1.default({
                     email: email,
                     otp: otp,
+                    otpExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
                     auth_provider: "email",
                 });
                 yield newUser.save();
@@ -160,7 +162,7 @@ class AuthController {
                     res.status(400).send('User not found');
                     return;
                 }
-                if (user.otp === otp) {
+                if (user.otp === otp && user.otpExpiry > new Date()) {
                     user.password = password;
                     user.otp = "";
                     user.verified = true;

@@ -8,6 +8,7 @@ interface IUser extends Document {
     password: string;
     verified: boolean;
     otp: string;
+    otpExpiry: Date;
     auth_provider: string;
     social_id: string;
     designation?: string;
@@ -66,6 +67,7 @@ const UserSchema: Schema<IUser> = new Schema({
     password: { type: String },
     verified: { type: Boolean, default: false },
     otp: { type: String },
+    otpExpiry: { type: Date },
     auth_provider: { type: String, required: true },
     social_id: { type: String,/* required: true*/ },
     designation: { type: String },

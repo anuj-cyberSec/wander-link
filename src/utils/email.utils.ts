@@ -3,7 +3,27 @@ const nodemailer = require('nodemailer');
 // const Email = 'founders@wonderconnect.in'
 // const Password = 'wonder@connect_kunal&anuj'
  
- 
+ const generateOtpEmailTemplate = (otp: string) => {
+    return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="color: #333; text-align: center;">WanderConnect - Email Verification</h2>
+        <p style="font-size: 16px; color: #555;">Hello,</p>
+        <p style="font-size: 16px; color: #555;">
+            Your OTP for verifying your email address is:
+        </p>
+        <div style="font-size: 32px; font-weight: bold; text-align: center; margin: 20px 0; color: #007BFF;">
+            ${otp}
+        </div>
+        <p style="font-size: 14px; color: #777;">
+            This OTP is valid for the next 10 minutes. Please do not share it with anyone.
+        </p>
+        <hr style="border: none; border-top: 1px solid #eee;">
+        <p style="font-size: 12px; color: #aaa; text-align: center;">
+            © 2025 WanderConnect. All rights reserved.
+        </p>
+    </div>`;
+};
+
 const sendEmail = async (to: string, subject: string, html: string) => {
     try {
         // Create a transporter
@@ -30,4 +50,5 @@ const sendEmail = async (to: string, subject: string, html: string) => {
     }
 };
  
-export default sendEmail;
+// export default sendEmail;
+export { sendEmail, generateOtpEmailTemplate };

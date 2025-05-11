@@ -214,16 +214,74 @@ class UserController {
     static updateUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { name, profilePic, bio, age, gender, personality, interest } = req.body;
-                if (!name || !profilePic || !bio || !age || !gender || !personality || !interest) {
-                    res.send('Please fill all the fields');
+                const { name, profilePic, designation, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, location, languageSpoken, budget, travelStyle } = req.body;
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ error: 'Invalid userid' });
                     return;
                 }
-                const newUser = new user_model_1.default({
-                    name, profilePic, bio, age, gender, personality, interest
+                const user = yield user_model_1.default.findById(userId);
+                if (!user) {
+                    res.status(400).json({ error: 'User not found' });
+                    return;
+                }
+                const updateData = {};
+                if (name !== undefined && name !== "")
+                    updateData.name = name;
+                if (profilePic !== undefined && profilePic !== "")
+                    updateData.profilePic = profilePic;
+                if (designation !== undefined && designation !== "")
+                    updateData.designation = designation;
+                if (bio !== undefined && bio !== "")
+                    updateData.bio = bio;
+                if (age !== undefined && age !== "")
+                    updateData.age = age;
+                if (gender !== undefined && gender !== "")
+                    updateData.gender = gender;
+                if ((location === null || location === void 0 ? void 0 : location.type) === "Point" && Array.isArray(location === null || location === void 0 ? void 0 : location.coordinates) && (location === null || location === void 0 ? void 0 : location.coordinates.length) === 2) {
+                    updateData.location = {
+                        type: "Point",
+                        coordinates: location.coordinates
+                    };
+                }
+                if (Array.isArray(languageSpoken) && languageSpoken.length > 0) {
+                    updateData.languageSpoken = languageSpoken;
+                }
+                if (budget !== undefined && budget !== "")
+                    updateData.budget = budget;
+                if (travelStyle !== undefined && travelStyle !== "")
+                    updateData.travelStyle = travelStyle;
+                // aboutMe nested structure — only set if arrays are non-empty
+                if (Array.isArray(personality) && personality.length > 0) {
+                    updateData["aboutMe.personality"] = personality;
+                }
+                if (Array.isArray(travelPreference) && travelPreference.length > 0) {
+                    updateData["aboutMe.travelPreference"] = travelPreference;
+                }
+                if (Array.isArray(lifestyleChoice) && lifestyleChoice.length > 0) {
+                    updateData["aboutMe.lifestyleChoice"] = lifestyleChoice;
+                }
+                if (Array.isArray(physicalInfo) && physicalInfo.length > 0) {
+                    updateData["aboutMe.physicalInfo"] = physicalInfo;
+                }
+                if (Array.isArray(hobbiesInterest) && hobbiesInterest.length > 0) {
+                    updateData["aboutMe.hobbiesInterest"] = hobbiesInterest;
+                }
+                if (Array.isArray(funIcebreakerTag) && funIcebreakerTag.length > 0) {
+                    updateData["aboutMe.funIcebreakerTag"] = funIcebreakerTag;
+                }
+                if (Object.keys(updateData).length === 0) {
+                    res.status(400).send("No valid fields to update.");
+                    return;
+                }
+                const updatedUser = yield user_model_1.default.findByIdAndUpdate(userId, updateData, {
+                    new: true,
                 });
-                yield newUser.save();
-                res.send('User created successfully');
+                if (!updatedUser) {
+                    res.status(404).send("User not found");
+                    return;
+                }
+                res.status(200).json({ message: "User updated successfully", user: updatedUser });
                 return;
             }
             catch (error) {
@@ -382,7 +440,8 @@ class UserController {
                     return;
                 }
                 // Fetch the last swipe whose approved do not exist or approved is false and populate the target (Trip) and creator (User)
-                const lastswipe = yield swipe_model_1.default.findOne({ swiper: userId,
+                const lastswipe = yield swipe_model_1.default.findOne({
+                    swiper: userId,
                     $or: [
                         { accepted: { $exists: false } }, // No accepted field
                         { accepted: false } // accepted is false

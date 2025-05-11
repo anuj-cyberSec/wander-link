@@ -42,6 +42,7 @@ const UserSchema = new mongoose_1.Schema({
     password: { type: String },
     verified: { type: Boolean, default: false },
     otp: { type: String },
+    otpExpiry: { type: Date },
     auth_provider: { type: String, required: true },
     social_id: { type: String, /* required: true*/ },
     designation: { type: String },

@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import User from '../models/user.model';
 import path from 'path';
 import nodemailer from 'nodemailer';
-import sendEmail from '../utils/email.utils';
+import {sendEmail, generateOtpEmailTemplate} from '../utils/email.utils';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 const secret = process.env.JWT_SECRET as string;
@@ -98,7 +98,7 @@ class AuthController {
                     await user.save();
                     const to = email;
                     const subject = 'OTP for WanderLink registration';
-                    const html = `Your OTP is ${otp}`;
+                    const html = generateOtpEmailTemplate(otp);
                     await sendEmail(to, subject, html);
                     res.send('OTP sent to email');
                     return;
@@ -132,11 +132,14 @@ class AuthController {
             
             const to = email;
             const subject = 'OTP for WanderLink registration';
-            const html = `Your OTP is ${otp}`;
+            // const html = `Your OTP is ${otp}`;
+            const html = generateOtpEmailTemplate(otp);
+
             await sendEmail(to, subject, html);
             const newUser = new User({
                 email: email,
                 otp: otp,
+                otpExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
                 auth_provider: "email",
             });
             await newUser.save();
@@ -169,7 +172,7 @@ class AuthController {
                 res.status(400).send('User not found');
                 return;
             }
-            if(user.otp === otp){
+            if(user.otp === otp && user.otpExpiry > new Date()){
                 user.password = password;
                 user.otp = "";
                 user.verified = true;

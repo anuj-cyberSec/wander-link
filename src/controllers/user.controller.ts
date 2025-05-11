@@ -220,17 +220,83 @@ class UserController {
 
     static async updateUser(req: Request, res: Response) {
         try {
-            const { name, profilePic, bio, age, gender, personality, interest } = req.body;
-            if (!name || !profilePic || !bio || !age || !gender || !personality || !interest) {
-                res.send('Please fill all the fields');
+            const { name, profilePic, designation, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, location, languageSpoken, budget, travelStyle } = req.body;
+            const userId = (req as any).user.id;
+            if (!userId) {
+                res.status(400).json({ error: 'Invalid userid' });
                 return;
             }
-            const newUser = new User({
-                name, profilePic, bio, age, gender, personality, interest
-            });
-            await newUser.save();
-            res.send('User created successfully');
-            return;
+            const user = await User.findById(userId);
+            if (!user) {
+                res.status(400).json({ error: 'User not found' });
+                return;
+            }
+            const updateData: any = {};
+
+            if(name !== undefined && name !== "")   updateData.name = name;
+            if(profilePic !== undefined && profilePic !== "") updateData.profilePic = profilePic;
+            if(designation !== undefined && designation !== "") updateData.designation = designation;
+            if(bio !== undefined && bio !== "") updateData.bio = bio;
+            if(age !== undefined && age !== "") updateData.age = age;
+            if(gender !== undefined && gender !== "") updateData.gender = gender;
+
+            if(location?.type === "Point" && Array.isArray(location?.coordinates) && location?.coordinates.length === 2) {
+                updateData.location = {
+                    type: "Point",
+                    coordinates: location.coordinates
+                };
+            }
+
+            if (Array.isArray(languageSpoken) && languageSpoken.length > 0) {
+            updateData.languageSpoken = languageSpoken;
+        }
+
+        if (budget !== undefined && budget !== "") updateData.budget = budget;
+        if (travelStyle !== undefined && travelStyle !== "") updateData.travelStyle = travelStyle;
+
+        // aboutMe nested structure — only set if arrays are non-empty
+        if (Array.isArray(personality) && personality.length > 0) {
+            updateData["aboutMe.personality"] = personality;
+        }
+
+        if (Array.isArray(travelPreference) && travelPreference.length > 0) {
+            updateData["aboutMe.travelPreference"] = travelPreference;
+        }
+
+        if (Array.isArray(lifestyleChoice) && lifestyleChoice.length > 0) {
+            updateData["aboutMe.lifestyleChoice"] = lifestyleChoice;
+        }
+
+        if (Array.isArray(physicalInfo) && physicalInfo.length > 0) {
+            updateData["aboutMe.physicalInfo"] = physicalInfo;
+        }
+
+        if (Array.isArray(hobbiesInterest) && hobbiesInterest.length > 0) {
+            updateData["aboutMe.hobbiesInterest"] = hobbiesInterest;
+        }
+
+        if (Array.isArray(funIcebreakerTag) && funIcebreakerTag.length > 0) {
+            updateData["aboutMe.funIcebreakerTag"] = funIcebreakerTag;
+        }
+
+        if (Object.keys(updateData).length === 0) {
+             res.status(400).send("No valid fields to update.");
+             return;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+            new: true,
+        });
+
+        if (!updatedUser) {
+             res.status(404).send("User not found");
+             return;
+        }
+
+         res.status(200).json({ message: "User updated successfully", user: updatedUser });
+         return
+
+
         }
         catch (error) {
             res.send('Error');
@@ -350,7 +416,7 @@ class UserController {
                 swiper: s.swiper,
                 target: s.target,
                 direction: s.direction,
-                creator : user._id,
+                creator: user._id,
                 createdAt: s.createdAt || new Date()
             }));
 
@@ -412,14 +478,15 @@ class UserController {
             }
 
             // Fetch the last swipe whose approved do not exist or approved is false and populate the target (Trip) and creator (User)
-            const lastswipe = await Swipe.findOne({ swiper: userId, 
-                
-                    $or: [
-                        { accepted: { $exists: false } }, // No accepted field
-                        { accepted: false } // accepted is false
-                    ]
-                
-             })
+            const lastswipe = await Swipe.findOne({
+                swiper: userId,
+
+                $or: [
+                    { accepted: { $exists: false } }, // No accepted field
+                    { accepted: false } // accepted is false
+                ]
+
+            })
                 .sort({ createdAt: 1 })
                 .populate({
                     path: 'target', // Populate the target (which is a Trip)
@@ -457,7 +524,7 @@ class UserController {
         }
     }
 
-    
+
     static async fetchTrip(req: Request, res: Response) {
         try {
             const tripId = req.body.id;
@@ -539,7 +606,7 @@ class UserController {
                     }
                 })
                 .sort({ createdAt: -1 }); // Sort by createdAt in descending order
-                console.log("swipes are ", swipes);
+            console.log("swipes are ", swipes);
             if (!swipes || swipes.length === 0) {
                 res.status(400).json({ message: 'No swipes found' });
                 return;
@@ -562,16 +629,16 @@ class UserController {
 
     // this api --> the user's trip which others have swiped will be shown here so that user can approve or reject
     static async fetchTripForApproval(req: Request, res: Response) {
-        try{
+        try {
             const userId = (req as any).user.id;
             if (!userId) {
                 res.status(400).json({ message: 'Invalid userId' });
                 return;
             }
-            
+
             // console.log("user id is ", userId);
             // now search with user._id in swipe collection and should not include approved false and then populate target with trip collection and swiper with user collection
-            const swipes = await Swipe.find({ creator: userId, direction: "right", accepted: { $exists: false },  })
+            const swipes = await Swipe.find({ creator: userId, direction: "right", accepted: { $exists: false }, })
                 .populate({
                     path: 'target', // Populate the target (which is a Trip)
                     // populate: {
@@ -584,9 +651,9 @@ class UserController {
                     select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                 })
                 .sort({ createdAt: -1 }); // Sort by createdAt in descending order
-            
-            
-                console.log("swipes are ", swipes);
+
+
+            console.log("swipes are ", swipes);
             if (!swipes || swipes.length === 0) {
                 res.status(400).json({ message: 'No swipes found' });
                 return;
@@ -599,18 +666,18 @@ class UserController {
             }));
             res.status(200).json({ message: response });
             return;
-                
+
         }
-        catch(error){
+        catch (error) {
             console.error("Error in fetchTripForApproval:", error);
-            res.status(500).json({message: 'Internal Server Error'});
+            res.status(500).json({ message: 'Internal Server Error' });
             return;
         }
     }
 
     static async approveTrip(req: Request, res: Response) {
         // api to approve trip and also store that swiper from swipe to trip participants
-        try{
+        try {
             const tripObjectId = req.body.tripObjectId;   //it is actually swipe object id
             const approval = req.body.approval;
             const userId = (req as any).user.id;
@@ -642,9 +709,9 @@ class UserController {
             res.status(200).json({ message: 'Trip approved successfully' });
             return;
         }
-        catch(error){
+        catch (error) {
             console.error("Error in approveTrip:", error);
-            res.status(500).json({message: 'Internal Server Error'});
+            res.status(500).json({ message: 'Internal Server Error' });
             return;
         }
     }
