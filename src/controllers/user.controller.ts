@@ -335,7 +335,7 @@ class UserController {
 
     static async createProfile(req: Request, res: Response) {
         try {
-            let { name, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, profilePic, location, languageSpoken, budget, travelStyle } = req.body;
+            let { name, bio, age, gender, personality, lifestyleChoice, physicalInfo,  profilePic, location, languageSpoken, designation } = req.body;
 
 
             const userId = (req as any).user.id;
@@ -355,6 +355,7 @@ class UserController {
             user.bio = bio || user.bio;
             user.age = age || user.age;
             user.gender = gender || user.gender;
+            user.designation = designation || user.designation;
 
             // Initialize aboutMe if it doesn't exist
             if (!user.aboutMe) {
@@ -369,16 +370,16 @@ class UserController {
             }
 
             user.aboutMe.personality = personality || user.aboutMe.personality;
-            user.aboutMe.travelPreference = travelPreference || user.aboutMe.travelPreference;
+            // user.aboutMe.travelPreference = travelPreference || user.aboutMe.travelPreference;
             user.aboutMe.lifestyleChoice = lifestyleChoice || user.aboutMe.lifestyleChoice;
             user.aboutMe.physicalInfo = physicalInfo || user.aboutMe.physicalInfo;
-            user.aboutMe.hobbiesInterest = hobbiesInterest || user.aboutMe.hobbiesInterest;
-            user.aboutMe.funIcebreakerTag = funIcebreakerTag || user.aboutMe.funIcebreakerTag;
+            // user.aboutMe.hobbiesInterest = hobbiesInterest || user.aboutMe.hobbiesInterest;
+            // user.aboutMe.funIcebreakerTag = funIcebreakerTag || user.aboutMe.funIcebreakerTag;
             user.profilePic = profilePic || user.profilePic;
             user.location = location || user.location;
             user.languageSpoken = languageSpoken || user.languageSpoken;
-            user.budget = budget || user.budget;
-            user.travelStyle = travelStyle || user.travelStyle;
+            // user.budget = budget || user.budget;
+            // user.travelStyle = travelStyle || user.travelStyle;
 
             await user.save();
             res.status(200).json({ messsage: "user updated successfully" });

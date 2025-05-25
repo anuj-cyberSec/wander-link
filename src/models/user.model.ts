@@ -43,7 +43,7 @@ interface IUser extends Document {
         }>;
         
     };
-    profilePic?: string;
+    profilePic?: string[]; // Array to store multiple profile picture URLs
     location?: {
         type: "Point";
         coordinates: [number, number];  // [longitude, latitude]
@@ -120,7 +120,8 @@ const UserSchema: Schema<IUser> = new Schema({
         }],
         
     },
-profilePic: { type: String },
+
+profilePic: {type: Array, default: []}, // Array to store multiple profile picture URLs
 location: {
     type: { type: String, enum: ["Point"] },
     coordinates: { type: [Number], index: "2dsphere" }

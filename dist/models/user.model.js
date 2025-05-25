@@ -94,7 +94,7 @@ const UserSchema = new mongoose_1.Schema({
                 iconUrl: { type: String }
             }],
     },
-    profilePic: { type: String },
+    profilePic: { type: Array, default: [] }, // Array to store multiple profile picture URLs
     location: {
         type: { type: String, enum: ["Point"] },
         coordinates: { type: [Number], index: "2dsphere" }
