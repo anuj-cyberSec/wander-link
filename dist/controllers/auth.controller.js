@@ -167,7 +167,8 @@ class AuthController {
                     user.otp = "";
                     user.verified = true;
                     yield user.save();
-                    res.send('OTP verified');
+                    const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
+                    res.send({ token });
                     return;
                 }
                 res.status(400).send('Invalid otp');
@@ -201,7 +202,7 @@ class AuthController {
                     return;
                 }
                 const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
-                res.send({ token, user });
+                res.send({ token });
                 return;
             }
             catch (error) {
