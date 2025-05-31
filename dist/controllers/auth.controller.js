@@ -202,7 +202,7 @@ class AuthController {
                     return;
                 }
                 const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
-                res.send({ token });
+                res.send({ token, isProfileCompleted: user.profileCompleted });
                 return;
             }
             catch (error) {

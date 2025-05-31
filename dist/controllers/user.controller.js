@@ -214,7 +214,7 @@ class UserController {
     static updateUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { name, profilePic, designation, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, location, languageSpoken, budget, travelStyle } = req.body;
+                const { name, profilePic, designation, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, location, languageSpoken, budget, travelStyle, isProfileCompleted } = req.body;
                 const userId = req.user.id;
                 if (!userId) {
                     res.status(400).json({ error: 'Invalid userid' });
@@ -238,6 +238,7 @@ class UserController {
                     updateData.age = age;
                 if (gender !== undefined && gender !== "")
                     updateData.gender = gender;
+                updateData.profileCompleted = isProfileCompleted !== undefined ? isProfileCompleted : user.profileCompleted;
                 if ((location === null || location === void 0 ? void 0 : location.type) === "Point" && Array.isArray(location === null || location === void 0 ? void 0 : location.coordinates) && (location === null || location === void 0 ? void 0 : location.coordinates.length) === 2) {
                     updateData.location = {
                         type: "Point",

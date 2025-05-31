@@ -212,7 +212,7 @@ class AuthController {
                 return;
             }
             const token = jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
-            res.send({ token });
+            res.send({ token, isProfileCompleted: user.profileCompleted });
             return;
         }
         catch (error) {

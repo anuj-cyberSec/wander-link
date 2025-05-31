@@ -220,7 +220,7 @@ class UserController {
 
     static async updateUser(req: Request, res: Response) {
         try {
-            const { name, profilePic, designation, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, location, languageSpoken, budget, travelStyle } = req.body;
+            const { name, profilePic, designation, bio, age, gender, personality, travelPreference, lifestyleChoice, physicalInfo, hobbiesInterest, funIcebreakerTag, location, languageSpoken, budget, travelStyle, isProfileCompleted } = req.body;
             const userId = (req as any).user.id;
             if (!userId) {
                 res.status(400).json({ error: 'Invalid userid' });
@@ -239,6 +239,8 @@ class UserController {
             if(bio !== undefined && bio !== "") updateData.bio = bio;
             if(age !== undefined && age !== "") updateData.age = age;
             if(gender !== undefined && gender !== "") updateData.gender = gender;
+
+            updateData.profileCompleted = isProfileCompleted !== undefined ? isProfileCompleted : user.profileCompleted;
 
             if(location?.type === "Point" && Array.isArray(location?.coordinates) && location?.coordinates.length === 2) {
                 updateData.location = {
