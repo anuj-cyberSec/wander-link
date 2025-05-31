@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface IUser extends Document {
     userId: string;
+    profileCompleted: boolean;
     name: string;
     email: string;
     password: string;
@@ -48,6 +49,13 @@ interface IUser extends Document {
         type: "Point";
         coordinates: [number, number];  // [longitude, latitude]
     };
+    address?: {
+        street?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+        zipCode?: string;
+    };
     tripIds?: Schema.Types.ObjectId[];
     languageSpoken?: string[];
     budget?: "Low" | "Medium" | "High";
@@ -62,6 +70,7 @@ interface IUser extends Document {
 
 const UserSchema: Schema<IUser> = new Schema({
     userId: { type: String, default: () => uuidv4() },
+    profileCompleted: {type: Boolean, default: false},
     name: { type: String, /*required: true*/ },
     email: { type: String, required: true, unique: true },
     password: { type: String },
@@ -125,6 +134,13 @@ profilePic: {type: Array, default: []}, // Array to store multiple profile pictu
 location: {
     type: { type: String, enum: ["Point"] },
     coordinates: { type: [Number], index: "2dsphere" }
+},
+address: {
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    country: { type: String },
+    zipCode: { type: String }
 },
 // trips: { type: [String] },
 tripIds: [{ type: Schema.Types.ObjectId, ref: "Trip" }],

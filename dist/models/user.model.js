@@ -37,6 +37,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const uuid_1 = require("uuid");
 const UserSchema = new mongoose_1.Schema({
     userId: { type: String, default: () => (0, uuid_1.v4)() },
+    profileCompleted: { type: Boolean, default: false },
     name: { type: String, /*required: true*/ },
     email: { type: String, required: true, unique: true },
     password: { type: String },
@@ -98,6 +99,13 @@ const UserSchema = new mongoose_1.Schema({
     location: {
         type: { type: String, enum: ["Point"] },
         coordinates: { type: [Number], index: "2dsphere" }
+    },
+    address: {
+        street: { type: String },
+        city: { type: String },
+        state: { type: String },
+        country: { type: String },
+        zipCode: { type: String }
     },
     // trips: { type: [String] },
     tripIds: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Trip" }],

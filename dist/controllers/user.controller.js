@@ -243,6 +243,9 @@ class UserController {
                         type: "Point",
                         coordinates: location.coordinates
                     };
+                    // also update address(street, city, state, country, zipCode) from longitude and latitude
+                    // before that convert coordinates to address using some geocoding service
+                    // For example, you can use Google Maps Geocoding API or OpenStreetMap Nominatim API
                 }
                 if (Array.isArray(languageSpoken) && languageSpoken.length > 0) {
                     updateData.languageSpoken = languageSpoken;
@@ -318,7 +321,7 @@ class UserController {
     static createProfile(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                let { name, bio, age, gender, personality, lifestyleChoice, physicalInfo, profilePic, location, languageSpoken, designation } = req.body;
+                let { name, bio, age, gender, personality, lifestyleChoice, physicalInfo, profilePic, location, languageSpoken, designation, isProfileCompleted } = req.body;
                 const userId = req.user.id;
                 if (!userId) {
                     res.status(400).json({ message: 'Invalid userId' });
@@ -335,6 +338,7 @@ class UserController {
                 user.age = age || user.age;
                 user.gender = gender || user.gender;
                 user.designation = designation || user.designation;
+                user.profileCompleted = isProfileCompleted;
                 // Initialize aboutMe if it doesn't exist
                 if (!user.aboutMe) {
                     user.aboutMe = {
