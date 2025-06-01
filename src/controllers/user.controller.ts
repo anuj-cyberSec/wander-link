@@ -342,7 +342,7 @@ class UserController {
 
     static async createProfile(req: Request, res: Response) {
         try {
-            let { name, bio, age, gender, personality, lifestyleChoice, physicalInfo,  profilePic, location, languageSpoken, designation, isProfileCompleted } = req.body;
+            let { name, bio, age, gender, personality, lifestyleChoice, physicalInfo,  profilePic, location, languageSpoken, Designation, isProfileCompleted } = req.body;
 
 
             const userId = (req as any).user.id;
@@ -362,7 +362,7 @@ class UserController {
             user.bio = bio || user.bio;
             user.age = age || user.age;
             user.gender = gender || user.gender;
-            user.designation = designation || user.designation;
+            user.designation = Designation || user.designation;
             user.profileCompleted = isProfileCompleted
 
             // Initialize aboutMe if it doesn't exist

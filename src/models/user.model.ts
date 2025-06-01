@@ -83,11 +83,58 @@ const UserSchema: Schema<IUser> = new Schema({
     bio: { type: String },
     age: { type: Number },
     gender: { type: String, enum: ["Male", "Female", "Other"] },
+    // aboutMe: {
+    //     personality: [{
+    //         name: {
+    //             type: String,
+    //             enum: ["Introvert", "Extrovert", "Ambivert", "Empath", "Chill Vibes", "Social Butterfly"]
+    //         },
+    //         iconUrl: { type: String }
+    //     }],
+    //     travelPreference: [{
+    //         name: {
+    //             type: String,
+    //             enum: ["Group Explorer", "Planned Itineraies", "Road Tripper", "Nature Lover", "History Buff", "Culture Seeker", "Beach Bum", "Mountain Soul", "Budget Traveler", "Luxury Lover", "Passport Ready"]
+    //         },
+    //         iconUrl: { type: String }
+    //     }],
+    //     lifestyleChoice: [{
+    //         name: {
+    //             type: String,
+    //             enum: ["Smoker", "Non-Smoker", "Vegan/Vegetarian", "Fitness Freak", "Night Owl", "Early Bird", "Party Animal", "Sober Traveller", "Occasional Drinker"]
+    //         },
+    //         iconUrl: { type: String }
+    //     }],
+    //     physicalInfo: [{
+    //         name: {
+    //             type: String,
+    //             enum: ["Height", "Body Type",  ]
+    //         },
+    //         value: { type: String },
+    //         iconUrl: { type: String }
+    //     }],
+    //     hobbiesInterest: [{
+    //         name: {
+    //             type: String,
+    //             enum: ["Loves Driving","Music Lover","Bookworm","Foodie","Dancer","Gamer","Yoga Enthusiast","Meditation","Cycling","Vlogging / Content Creation","Photography","Camping"]
+    //         },
+    //         iconUrl: { type: String }
+    //     }],
+    //     funIcebreakerTag: [{
+    //         name: {
+    //             type: String,
+    //             enum: ["Always Down to Explore","Never Says No to Coffee","Carries Snacks Always","Can Sleep Anywhere","Travel DJ","Map Reader","The Planner Friend","Chill Companion","Loves Deep Conversations"]
+    //         },
+    //         iconUrl: { type: String }
+    //     }],
+        
+    // },
+
     aboutMe: {
         personality: [{
             name: {
                 type: String,
-                enum: ["Introvert", "Extrovert", "Ambivert", "Empath", "Chill Vibes", "Social Butterfly"]
+                enum: ["Adventurer", "Planner", "Explorer", "Relaxer", "Social Butterfly", "Budget Traveller", "Digital Nomad", "Trekking", "Night Owl", "Luxury Lover", "Star Gazing", "Photographer", "Spontaneous"]
             },
             iconUrl: { type: String }
         }],
@@ -101,7 +148,7 @@ const UserSchema: Schema<IUser> = new Schema({
         lifestyleChoice: [{
             name: {
                 type: String,
-                enum: ["Smoker", "Non-Smoker", "Vegan/Vegetarian", "Fitness Freak", "Night Owl", "Early Bird", "Party Animal", "Sober Traveller", "Occasional Drinker"]
+                enum: ["Yes, I drink", "Non drinker", "Occasionally", "Yes, I smoke", "Non smoker", "Sometimes"]
             },
             iconUrl: { type: String }
         }],
