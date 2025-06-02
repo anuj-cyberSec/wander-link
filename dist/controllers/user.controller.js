@@ -59,7 +59,8 @@ class UserController {
                 busboyHeader.on('finish', () => __awaiter(this, void 0, void 0, function* () {
                     try {
                         if (!imageFileName || !imageTobeUplaoded.filePath) {
-                            return res.status(400).json({ message: 'No file uploaded' });
+                            res.status(400).json({ message: 'No file uploaded' });
+                            return;
                         }
                         console.log("imageTobeUplaoded is ", imageTobeUplaoded);
                         // uploading the file to azure blob storage

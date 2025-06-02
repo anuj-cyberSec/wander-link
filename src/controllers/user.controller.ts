@@ -56,7 +56,8 @@ class UserController {
 
                 try {
                     if (!imageFileName || !imageTobeUplaoded.filePath) {
-                        return res.status(400).json({ message: 'No file uploaded' });
+                        res.status(400).json({ message: 'No file uploaded' });
+                        return;
                     }
                     console.log("imageTobeUplaoded is ", imageTobeUplaoded);
 
@@ -90,7 +91,7 @@ class UserController {
                     profilePic.push(fileUrl);
                     await user.save();
                     // Respond with the file URL and other details
-                    
+
                     res.status(200).json({
                         message: 'File uploaded successfully',
                         fileName: imageFileName,
