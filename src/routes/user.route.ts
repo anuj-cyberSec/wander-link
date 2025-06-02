@@ -1,11 +1,13 @@
 import express from 'express';
 import UserController from '../controllers/user.controller';
 import authentication from '../middleware/authenticator';
+import { authenticate } from 'passport';
 
 const router = express.Router();
 
 const userController = new UserController();
 
+router.post('/profile-upload', authentication, UserController.uploadProfilePicture)
 // router.post('/getUsers', authentication, UserController.getUsers);
 router.post('/homepage', authentication, UserController.homepage);
 router.post('/createTrip', authentication, UserController.createTrip);

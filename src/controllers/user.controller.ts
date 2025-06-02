@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import User from '../models/user.model';
@@ -5,9 +8,111 @@ import Trip from '../models/trip.model';
 import Swipe from '../models/swipe.model';
 import { ISwipe } from '../models/swipe.model'
 
+
+import busboy from 'busboy';
+import path from 'path';
+import fs from 'fs';
+import { BlobServiceClient } from '@azure/storage-blob';
+import { v4 as uuidv4 } from 'uuid';
+
 class UserController {
 
-    
+    static async uploadProfilePicture(req: Request, res: Response) {
+        try {
+            const userId = (req as any).user.id;
+            if (!userId) {
+                res.status(400).json({ message: 'Invalid userId' });
+                return;
+            }
+            const user = await User.findById(userId);
+            if (!user) {
+                res.status(400).json({ message: 'User not found' });
+                return;
+            }
+
+            const busboyHeader = busboy({ headers: req.headers }); //it is used to parse the multipart/form-data request
+            let imageFileName: string;
+            let imageTobeUplaoded: { filePath?: string; mimetype?: string } = {};
+
+            busboyHeader.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, mimetype: string) => {
+                console.log("file is ", file);
+                console.log("filename is ", filename);
+                // Generate a unique filename using UUID
+                // const uniqueFileName = `${Date.now()}-${filename}`;
+                const actualFileName = (filename && typeof filename === 'object' && filename.filename)
+                    ? filename.filename
+                    : String(filename); // fallback for safety
+                const uniqueFileName = `${Date.now()}-${actualFileName}`;
+                imageFileName = uniqueFileName;
+                const filePath = path.join(__dirname, '..', 'TempUploads', uniqueFileName);
+                imageTobeUplaoded = { filePath, mimetype };
+                file.pipe(fs.createWriteStream(filePath));
+            });
+            console.log("busboyHeader is ", busboyHeader);
+            // deleteImage=(imageFileName) => {
+
+            // }
+            busboyHeader.on('finish', async () => {
+
+                try {
+                    if (!imageFileName || !imageTobeUplaoded.filePath) {
+                        return res.status(400).json({ message: 'No file uploaded' });
+                    }
+                    console.log("imageTobeUplaoded is ", imageTobeUplaoded);
+
+                    // uploading the file to azure blob storage
+                    const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.CONTAINER_CONNECTION_STRING || '');
+                    const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME || 'profile-pic-storage');
+                    const blobName = `${process.env.DIRECTORY}/${imageFileName}`;
+                    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+                    const uploadBlobResponse = await blockBlobClient.uploadFile(imageTobeUplaoded.filePath, {
+                        blobHTTPHeaders: {
+                            blobContentType: imageTobeUplaoded.mimetype || 'application/octet-stream'
+                        }
+                    });
+                    console.log(`Upload block blob ${blobName} successfully`, uploadBlobResponse.requestId);
+                    // After successful upload, delete the local file
+
+                    fs.unlink(imageTobeUplaoded.filePath, (err) => {
+                        if (err) {
+                            console.error("Error deleting local file:", err);
+                        } else {
+                            console.log("Local file deleted successfully");
+                        }
+                    });
+                    // Return the URL of the uploaded file
+                    const fileUrl = `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.CONTAINER_NAME}/${blobName}`;
+                    console.log("File uploaded to Azure Blob Storage successfully:", fileUrl);
+
+                    // push the file URL to the user profile
+                    let profilePic = user.profilePic || [];
+                    profilePic.push(fileUrl);
+                    await user.save();
+                    // Respond with the file URL and other details
+                    
+                    res.status(200).json({
+                        message: 'File uploaded successfully',
+                        fileName: imageFileName,
+                        fileUrl: fileUrl,
+                        mimetype: imageTobeUplaoded.mimetype
+                    });
+
+                } catch (error) {
+                    console.error("Error in file upload:", error);
+                    res.status(500).json({ message: 'Internal Server Error' });
+
+                }
+            });
+            req.pipe(busboyHeader); // Pipe the request to busboy to parse the multipart/form-data
+            return;
+        }
+        catch (error) {
+            console.error("Error in uploadProfilePicture:", error);
+            res.status(500).json({ message: 'Internal Server Error' });
+            return;
+        }
+    }
 
     static async homepage(req: Request, res: Response) {
         try {
@@ -100,7 +205,7 @@ class UserController {
 
     }
 
- 
+
 
 
 
@@ -151,75 +256,75 @@ class UserController {
             }
             const updateData: any = {};
 
-            if(name !== undefined && name !== "")   updateData.name = name;
-            if(profilePic !== undefined && profilePic !== "") updateData.profilePic = profilePic;
-            if(designation !== undefined && designation !== "") updateData.designation = designation;
-            if(bio !== undefined && bio !== "") updateData.bio = bio;
-            if(age !== undefined && age !== "") updateData.age = age;
-            if(gender !== undefined && gender !== "") updateData.gender = gender;
+            if (name !== undefined && name !== "") updateData.name = name;
+            if (profilePic !== undefined && profilePic !== "") updateData.profilePic = profilePic;
+            if (designation !== undefined && designation !== "") updateData.designation = designation;
+            if (bio !== undefined && bio !== "") updateData.bio = bio;
+            if (age !== undefined && age !== "") updateData.age = age;
+            if (gender !== undefined && gender !== "") updateData.gender = gender;
 
             updateData.profileCompleted = isProfileCompleted !== undefined ? isProfileCompleted : user.profileCompleted;
 
-            if(location?.type === "Point" && Array.isArray(location?.coordinates) && location?.coordinates.length === 2) {
+            if (location?.type === "Point" && Array.isArray(location?.coordinates) && location?.coordinates.length === 2) {
                 updateData.location = {
                     type: "Point",
                     coordinates: location.coordinates
                 };
 
                 // also update address(street, city, state, country, zipCode) from longitude and latitude
-                
+
                 // before that convert coordinates to address using some geocoding service
                 // For example, you can use Google Maps Geocoding API or OpenStreetMap Nominatim API
             }
 
             if (Array.isArray(languageSpoken) && languageSpoken.length > 0) {
-            updateData.languageSpoken = languageSpoken;
-        }
+                updateData.languageSpoken = languageSpoken;
+            }
 
-        if (budget !== undefined && budget !== "") updateData.budget = budget;
-        if (travelStyle !== undefined && travelStyle !== "") updateData.travelStyle = travelStyle;
+            if (budget !== undefined && budget !== "") updateData.budget = budget;
+            if (travelStyle !== undefined && travelStyle !== "") updateData.travelStyle = travelStyle;
 
-        // aboutMe nested structure — only set if arrays are non-empty
-        if (Array.isArray(personality) && personality.length > 0) {
-            updateData["aboutMe.personality"] = personality;
-        }
+            // aboutMe nested structure — only set if arrays are non-empty
+            if (Array.isArray(personality) && personality.length > 0) {
+                updateData["aboutMe.personality"] = personality;
+            }
 
-        if (Array.isArray(travelPreference) && travelPreference.length > 0) {
-            updateData["aboutMe.travelPreference"] = travelPreference;
-        }
+            if (Array.isArray(travelPreference) && travelPreference.length > 0) {
+                updateData["aboutMe.travelPreference"] = travelPreference;
+            }
 
-        if (Array.isArray(lifestyleChoice) && lifestyleChoice.length > 0) {
-            updateData["aboutMe.lifestyleChoice"] = lifestyleChoice;
-        }
+            if (Array.isArray(lifestyleChoice) && lifestyleChoice.length > 0) {
+                updateData["aboutMe.lifestyleChoice"] = lifestyleChoice;
+            }
 
-        if (Array.isArray(physicalInfo) && physicalInfo.length > 0) {
-            updateData["aboutMe.physicalInfo"] = physicalInfo;
-        }
+            if (Array.isArray(physicalInfo) && physicalInfo.length > 0) {
+                updateData["aboutMe.physicalInfo"] = physicalInfo;
+            }
 
-        if (Array.isArray(hobbiesInterest) && hobbiesInterest.length > 0) {
-            updateData["aboutMe.hobbiesInterest"] = hobbiesInterest;
-        }
+            if (Array.isArray(hobbiesInterest) && hobbiesInterest.length > 0) {
+                updateData["aboutMe.hobbiesInterest"] = hobbiesInterest;
+            }
 
-        if (Array.isArray(funIcebreakerTag) && funIcebreakerTag.length > 0) {
-            updateData["aboutMe.funIcebreakerTag"] = funIcebreakerTag;
-        }
+            if (Array.isArray(funIcebreakerTag) && funIcebreakerTag.length > 0) {
+                updateData["aboutMe.funIcebreakerTag"] = funIcebreakerTag;
+            }
 
-        if (Object.keys(updateData).length === 0) {
-             res.status(400).send("No valid fields to update.");
-             return;
-        }
+            if (Object.keys(updateData).length === 0) {
+                res.status(400).send("No valid fields to update.");
+                return;
+            }
 
-        const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-            new: true,
-        });
+            const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+                new: true,
+            });
 
-        if (!updatedUser) {
-             res.status(404).send("User not found");
-             return;
-        }
+            if (!updatedUser) {
+                res.status(404).send("User not found");
+                return;
+            }
 
-         res.status(200).json({ message: "User updated successfully", user: updatedUser });
-         return
+            res.status(200).json({ message: "User updated successfully", user: updatedUser });
+            return
 
 
         }
@@ -260,7 +365,7 @@ class UserController {
 
     static async createProfile(req: Request, res: Response) {
         try {
-            let { name, bio, age, gender, personality, lifestyleChoice, physicalInfo,  profilePic, location, languageSpoken, Designation, isProfileCompleted } = req.body;
+            let { name, bio, age, gender, personality, lifestyleChoice, physicalInfo, profilePic, location, languageSpoken, Designation, isProfileCompleted } = req.body;
 
 
             const userId = (req as any).user.id;

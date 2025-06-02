@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@azure/storage-blob": "^12.27.0",
+    "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.17",
     "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.0",
@@ -9,6 +11,7 @@
     "@types/passport": "^1.0.17",
     "@types/uuidv4": "^5.0.0",
     "@vercel/node": "^5.1.7",
+    "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

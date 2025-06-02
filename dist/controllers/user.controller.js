@@ -12,11 +12,106 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const mongoose_1 = __importDefault(require("mongoose"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const trip_model_1 = __importDefault(require("../models/trip.model"));
 const swipe_model_1 = __importDefault(require("../models/swipe.model"));
+const busboy_1 = __importDefault(require("busboy"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const storage_blob_1 = require("@azure/storage-blob");
 class UserController {
+    static uploadProfilePicture(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                const user = yield user_model_1.default.findById(userId);
+                if (!user) {
+                    res.status(400).json({ message: 'User not found' });
+                    return;
+                }
+                const busboyHeader = (0, busboy_1.default)({ headers: req.headers }); //it is used to parse the multipart/form-data request
+                let imageFileName;
+                let imageTobeUplaoded = {};
+                busboyHeader.on('file', (fieldname, file, filename, encoding, mimetype) => {
+                    console.log("file is ", file);
+                    console.log("filename is ", filename);
+                    // Generate a unique filename using UUID
+                    // const uniqueFileName = `${Date.now()}-${filename}`;
+                    const actualFileName = (filename && typeof filename === 'object' && filename.filename)
+                        ? filename.filename
+                        : String(filename); // fallback for safety
+                    const uniqueFileName = `${Date.now()}-${actualFileName}`;
+                    imageFileName = uniqueFileName;
+                    const filePath = path_1.default.join(__dirname, '..', 'TempUploads', uniqueFileName);
+                    imageTobeUplaoded = { filePath, mimetype };
+                    file.pipe(fs_1.default.createWriteStream(filePath));
+                });
+                console.log("busboyHeader is ", busboyHeader);
+                // deleteImage=(imageFileName) => {
+                // }
+                busboyHeader.on('finish', () => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        if (!imageFileName || !imageTobeUplaoded.filePath) {
+                            return res.status(400).json({ message: 'No file uploaded' });
+                        }
+                        console.log("imageTobeUplaoded is ", imageTobeUplaoded);
+                        // uploading the file to azure blob storage
+                        const blobServiceClient = storage_blob_1.BlobServiceClient.fromConnectionString(process.env.CONTAINER_CONNECTION_STRING || '');
+                        const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME || 'profile-pic-storage');
+                        const blobName = `${process.env.DIRECTORY}/${imageFileName}`;
+                        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+                        const uploadBlobResponse = yield blockBlobClient.uploadFile(imageTobeUplaoded.filePath, {
+                            blobHTTPHeaders: {
+                                blobContentType: imageTobeUplaoded.mimetype || 'application/octet-stream'
+                            }
+                        });
+                        console.log(`Upload block blob ${blobName} successfully`, uploadBlobResponse.requestId);
+                        // After successful upload, delete the local file
+                        fs_1.default.unlink(imageTobeUplaoded.filePath, (err) => {
+                            if (err) {
+                                console.error("Error deleting local file:", err);
+                            }
+                            else {
+                                console.log("Local file deleted successfully");
+                            }
+                        });
+                        // Return the URL of the uploaded file
+                        const fileUrl = `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.CONTAINER_NAME}/${blobName}`;
+                        console.log("File uploaded to Azure Blob Storage successfully:", fileUrl);
+                        // push the file URL to the user profile
+                        let profilePic = user.profilePic || [];
+                        profilePic.push(fileUrl);
+                        yield user.save();
+                        // Respond with the file URL and other details
+                        res.status(200).json({
+                            message: 'File uploaded successfully',
+                            fileName: imageFileName,
+                            fileUrl: fileUrl,
+                            mimetype: imageTobeUplaoded.mimetype
+                        });
+                    }
+                    catch (error) {
+                        console.error("Error in file upload:", error);
+                        res.status(500).json({ message: 'Internal Server Error' });
+                    }
+                }));
+                req.pipe(busboyHeader); // Pipe the request to busboy to parse the multipart/form-data
+                return;
+            }
+            catch (error) {
+                console.error("Error in uploadProfilePicture:", error);
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
     static homepage(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

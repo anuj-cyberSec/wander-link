@@ -8,6 +8,7 @@ const user_controller_1 = __importDefault(require("../controllers/user.controlle
 const authenticator_1 = __importDefault(require("../middleware/authenticator"));
 const router = express_1.default.Router();
 const userController = new user_controller_1.default();
+router.post('/profile-upload', authenticator_1.default, user_controller_1.default.uploadProfilePicture);
 // router.post('/getUsers', authentication, UserController.getUsers);
 router.post('/homepage', authenticator_1.default, user_controller_1.default.homepage);
 router.post('/createTrip', authenticator_1.default, user_controller_1.default.createTrip);
