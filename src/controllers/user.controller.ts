@@ -7,6 +7,8 @@ import { ISwipe } from '../models/swipe.model'
 
 class UserController {
 
+    
+
     static async homepage(req: Request, res: Response) {
         try {
             // nearest location from user
@@ -98,91 +100,7 @@ class UserController {
 
     }
 
-    // static async homepage(req: Request, res: Response) {
-    //     try {
-    //         const userId = (req as any).user.id;
-    //         if (!userId) {
-    //             res.status(400).json({ error: 'Invalid userid' });
-    //             return;
-    //         }
-
-    //         const user = await User.findById(userId);
-    //         console.log("user id is ", user?.id);
-
-    //         if (!user || !user.location || !user.location.coordinates) {
-    //             res.status(400).json({ error: 'User location not found' });
-    //             return;
-    //         }
-
-    //         console.log("user location is ", user.location.coordinates);
-    //         const maxDistanceInMeters = 1000000;
-
-    //         // Step 1: Find nearby users first
-    //         const nearbyUsers = await User.find({
-    //             location: {
-    //                 $near: {
-    //                     $geometry: {
-    //                         type: "Point",
-    //                         coordinates: user.location.coordinates
-    //                     },
-    //                     $maxDistance: maxDistanceInMeters
-    //                 }
-    //             }
-    //         }).select('_id');
-
-    //         console.log(`Found ${nearbyUsers.length} nearby users`);
-
-    //         // Step 2: Get the IDs of nearby users
-    //         const nearbyUserIds = nearbyUsers.map(u => u._id);
-
-    //         // Step 3: Find trips created by these users
-    //         const trips = await Trip.aggregate([
-    //             {
-    //                 $match: {
-    //                     creator: { $in: nearbyUserIds }
-    //                 }
-    //             },
-    //             {
-    //                 $lookup: {
-    //                     from: "userData",
-    //                     localField: "creator",
-    //                     foreignField: "_id",
-    //                     as: "creator"
-    //                 }
-    //             },
-    //             {
-    //                 $unwind: {
-    //                     path: "$creator",
-    //                     preserveNullAndEmptyArrays: true
-    //                 }
-    //             },
-    //             {
-    //                 $project: {
-    //                     _id: 1,
-    //                     startDate: 1,
-    //                     endDate: 1,
-    //                     destination: 1,
-    //                     travellingFrom: 1,
-    //                     description: 1,
-    //                     tripVibe: 1,
-    //                     "creator._id": 1,
-    //                     "creator.name": 1,
-    //                     "creator.profilePic": 1,
-    //                     "creator.gender": 1,
-    //                     "creator.age": 1,
-    //                     "creator.aboutMe.personality": 1
-    //                 }
-    //             }
-    //         ]);
-
-    //         console.log(`Found ${trips.length} trips from nearby users`);
-    //         res.status(200).json(trips);
-    //     }
-    //     catch (error) {
-    //         console.error("Aggregation Error:", error);
-    //         res.status(500).json({ error: 'Internal server error' });
-    //     }
-    // }
+ 
 
 
 

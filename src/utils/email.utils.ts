@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
- 
+const dotenv = require('dotenv');
+dotenv.config();
 // const Email = 'founders@wonderconnect.in'
 // const Password = 'wonder@connect_kunal&anuj'
  
@@ -36,7 +37,7 @@ const sendEmail = async (to: string, subject: string, html: string) => {
                 pass: process.env.Password
             },
         });
- 
+        console.log("transporter is ", transporter)
         const mailOptions = {
             from: 'tech@wanderconnect.in', // Sender address
             to: to, // List of recipients

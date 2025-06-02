@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateOtpEmailTemplate = exports.sendEmail = void 0;
 const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+dotenv.config();
 // const Email = 'founders@wonderconnect.in'
 // const Password = 'wonder@connect_kunal&anuj'
 const generateOtpEmailTemplate = (otp) => {
@@ -46,6 +48,7 @@ const sendEmail = (to, subject, html) => __awaiter(void 0, void 0, void 0, funct
                 pass: process.env.Password
             },
         });
+        console.log("transporter is ", transporter);
         const mailOptions = {
             from: 'tech@wanderconnect.in', // Sender address
             to: to, // List of recipients
