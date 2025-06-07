@@ -15,130 +15,230 @@ import fs from 'fs';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 
+const CONTAINER_CONNECTION_STRING = process.env.CONTAINER_CONNECTION_STRING!;
+const CONTAINER_NAME = process.env.CONTAINER_NAME!;
+const DIRECTORY = process.env.DIRECTORY!;
+const STORAGE_ACCOUNT = process.env.STORAGE_ACCOUNT!;
+
 class UserController {
 
     static async uploadProfilePicture(req: Request, res: Response) {
         try {
-            const userId = (req as any).user.id;
+            const userId = (req as any).user?.id;
             if (!userId) {
-                res.status(400).json({ message: 'Invalid userId' });
+                res.status(400).json({ message: "Invalid userId" });
                 return;
+
             }
+
+
             const user = await User.findById(userId);
             if (!user) {
-                res.status(400).json({ message: 'User not found' });
+                res.status(404).json({ message: "User not found" });
                 return;
+
             }
 
-            const busboyHeader = busboy({ headers: req.headers }); //it is used to parse the multipart/form-data request
-            let imageFileName: string;
-            let imageTobeUplaoded: { filePath?: string; mimetype?: string } = {};
-            busboyHeader.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, mimetype: string) => {
-                // console.log("file is ", file);
-                // console.log("filename is ", filename);
-                // Generate a unique filename using UUID
-                // const uniqueFileName = `${Date.now()}-${filename}`;
-                const actualFileName = (filename && typeof filename === 'object' && filename.filename)
-                    ? filename.filename
-                    : String(filename); // fallback for safety
-                const uniqueFileName = `${Date.now()}-${actualFileName}`;
+            const bb = busboy({ headers: req.headers });
+            let imageFileName = "";
+            let imageToUpload: { filePath?: string; mimetype?: string } = {};
+
+            bb.on("file", (_fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, fileMimeType: string) => {
+                const safeFilename = typeof filename === "string" ? filename : filename?.filename;
+                const extension = path.extname(safeFilename);
+                const uniqueFileName = `${Date.now()}${extension}`;
                 imageFileName = uniqueFileName;
-                const filePath = path.join(__dirname, '..', 'TempUploads', uniqueFileName);
-                imageTobeUplaoded = { filePath, mimetype };
+
+                const filePath = path.join(__dirname, "..", "TempUploads", uniqueFileName);
+                imageToUpload = { filePath, mimetype: fileMimeType };
                 file.pipe(fs.createWriteStream(filePath));
             });
-            // console.log("busboyHeader is ", busboyHeader);
-            // deleteImage=(imageFileName) => {
 
-            // }
-            busboyHeader.on('finish', async () => {
-
-                try {
-                    if (!imageFileName || !imageTobeUplaoded.filePath) {
-                        res.status(400).json({ message: 'No file uploaded' });
-                        return;
-                    }
-                    // console.log("imageTobeUplaoded is ", imageTobeUplaoded);
-
-
-                    // uploading the file to azure blob storage
-                    const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.CONTAINER_CONNECTION_STRING || '');
-                    const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME || 'profile-pic-storage');
-                    const blobName = `${process.env.DIRECTORY}/${imageFileName}`;
-                    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-                    const uploadBlobResponse = await blockBlobClient.uploadFile(imageTobeUplaoded.filePath, {
-                        blobHTTPHeaders: {
-                            blobContentType: imageTobeUplaoded.mimetype || 'application/octet-stream'
-                        }
-                    });
-                    console.log(`Upload block blob ${blobName} successfully`, uploadBlobResponse.requestId);
-                    // After successful upload, delete the local file
-
-                    fs.unlink(imageTobeUplaoded.filePath, (err) => {
-                        if (err) {
-                            console.error("Error deleting local file:", err);
-                        } else {
-                            console.log("Local file deleted successfully");
-                        }
-                    });
-                    // Return the URL of the uploaded file
-                    const fileUrl = `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.CONTAINER_NAME}/${blobName}`;
-                    console.log("File uploaded to Azure Blob Storage successfully:", fileUrl);
-
-                    if (user.profilePic) {
-                        const blobClient = BlobServiceClient.fromConnectionString(process.env.CONTAINER_CONNECTION_STRING || '');
-                        const containerclient = blobClient.getContainerClient(process.env.CONTAINER_NAME || 'wanderconnect');
-                        // const blobName = `${process.env.DIRECTORY}/${user.profilePic[0] || ''}`;
-                        const oldFileUrl = user.profilePic[0];
-                        const urlParts = oldFileUrl.split('/');
-                        console.log("urlParts are ", urlParts);
-                        const oldFileName = urlParts[urlParts.length - 1];
-                        console.log("old file name is ", oldFileName);
-                        const blobName = `${process.env.DIRECTORY}/${oldFileName}`;
-                        // console.log("old file url is ", oldFileUrl);
-                        console.log("blob name is ", blobName);
-                        const blockBlobClient = containerclient.getBlockBlobClient(blobName);
-                        console.log("blockBlobClient is ", blockBlobClient);
-                        // Delete the old profile picture from Azure Blob Storage
-                        try{
-
-                            const deleteResponse = await blockBlobClient.deleteIfExists();
-                            console.log(`Deleted old profile picture: ${oldFileName}`, deleteResponse);
-                        }
-                        catch(error){
-                            console.error("Error deleting old profile picture:", error);
-                        }
-                    }
-                    // push the file URL to the user profile
-                    // let profilePic = user.profilePic || [];
-                    // profilePic.push(fileUrl);
-                    user.profilePic = [fileUrl];
-                    await user.save();
-                    // Respond with the file URL and other details
-
-                    res.status(200).json({
-                        message: 'File uploaded successfully',
-                        fileName: imageFileName,
-                        fileUrl: fileUrl,
-                        mimetype: imageTobeUplaoded.mimetype
-                    });
-
-                } catch (error) {
-                    console.error("Error in file upload:", error);
-                    res.status(500).json({ message: 'Internal Server Error' });
-
+            bb.on("finish", async () => {
+                if (!imageFileName || !imageToUpload.filePath) {
+                    res.status(400).json({ message: "No file uploaded" });
+                    return;
                 }
+
+                const blobServiceClient = BlobServiceClient.fromConnectionString(CONTAINER_CONNECTION_STRING);
+                const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+                const blobName = `${DIRECTORY}/${imageFileName}`;
+                const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+                await blockBlobClient.uploadFile(imageToUpload.filePath, {
+                    blobHTTPHeaders: {
+                        blobContentType: imageToUpload.mimetype || "application/octet-stream"
+                    }
+                });
+
+                const fileUrl = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/${blobName}`;
+                console.log("File uploaded successfully:", fileUrl);
+
+                // Delete the old profile pic if it exists
+                const oldUrl = user.profilePic?.[0];
+                if (oldUrl) {
+                    const expectedPrefix = `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.CONTAINER_NAME}/`;
+                    const blobToDelete = oldUrl.startsWith(expectedPrefix)
+                        ? oldUrl.slice(expectedPrefix.length)
+                        : '';
+
+                    if (blobToDelete) {
+                        try {
+                            const oldBlobClient = containerClient.getBlockBlobClient(blobToDelete);
+                            await oldBlobClient.deleteIfExists(); // ✅ correct method
+                            console.log('Old profile picture deleted successfully');
+                        } catch (err) {
+                            console.error('Error deleting old profile picture:', err);
+                        }
+                    }
+                }
+
+
+                // Update user record
+                user.profilePic = [fileUrl];
+                await user.save();
+
+                // Cleanup temp file
+                fs.unlink(imageToUpload.filePath, (err) => {
+                    if (err) console.error("Error deleting local file:", err);
+                    else console.log("Local temp file deleted");
+                });
+
+                res.status(200).json({
+                    message: "File uploaded successfully",
+                    fileName: imageFileName,
+                    fileUrl: fileUrl,
+                    mimetype: imageToUpload.mimetype
+                });
+                return;
+
             });
-            req.pipe(busboyHeader); // Pipe the request to busboy to parse the multipart/form-data
-            return;
-        }
-        catch (error) {
+
+            req.pipe(bb);
+        } catch (error) {
             console.error("Error in uploadProfilePicture:", error);
-            res.status(500).json({ message: 'Internal Server Error' });
+            res.status(500).json({ message: "Internal Server Error" });
             return;
         }
     }
+
+
+
+    // static async uploadProfilePicture(req: Request, res: Response) {
+    //     try {
+    //         const userId = (req as any).user.id;
+    //         if (!userId) {
+    //             res.status(400).json({ message: 'Invalid userId' });
+    //             return;
+    //         }
+    //         const user = await User.findById(userId);
+    //         if (!user) {
+    //             res.status(400).json({ message: 'User not found' });
+    //             return;
+    //         }
+
+    //         const busboyHeader = busboy({ headers: req.headers }); //it is used to parse the multipart/form-data request
+    //         let imageFileName: string;
+    //         let imageTobeUplaoded: { filePath?: string; mimetype?: string } = {};
+    //         busboyHeader.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, mimetype: string) => {
+    //             // console.log("file is ", file);
+    //             // console.log("filename is ", filename);
+    //             // Generate a unique filename using UUID
+    //             // const uniqueFileName = `${Date.now()}-${filename}`;
+    //             const actualFileName = (filename && typeof filename === 'object' && filename.filename)
+    //                 ? filename.filename
+    //                 : String(filename); // fallback for safety
+    //             const uniqueFileName = `${Date.now()}-${actualFileName}`;
+    //             imageFileName = uniqueFileName;
+    //             const filePath = path.join(__dirname, '..', 'TempUploads', uniqueFileName);
+    //             imageTobeUplaoded = { filePath, mimetype };
+    //             file.pipe(fs.createWriteStream(filePath));
+    //         });
+    //         // console.log("busboyHeader is ", busboyHeader);
+    //         // deleteImage=(imageFileName) => {
+
+    //         // }
+    //         busboyHeader.on('finish', async () => {
+
+    //             try {
+    //                 if (!imageFileName || !imageTobeUplaoded.filePath) {
+    //                     res.status(400).json({ message: 'No file uploaded' });
+    //                     return;
+    //                 }
+    //                 // console.log("imageTobeUplaoded is ", imageTobeUplaoded);
+
+
+    //                 // uploading the file to azure blob storage
+    //                 const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.CONTAINER_CONNECTION_STRING || '');
+    //                 const containerClient = blobServiceClient.getContainerClient(process.env.CONTAINER_NAME || 'profile-pic-storage');
+    //                 const blobName = `${process.env.DIRECTORY}/${imageFileName}`;
+    //                 const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+    //                 const uploadBlobResponse = await blockBlobClient.uploadFile(imageTobeUplaoded.filePath, {
+    //                     blobHTTPHeaders: {
+    //                         blobContentType: imageTobeUplaoded.mimetype || 'application/octet-stream'
+    //                     }
+    //                 });
+    //                 console.log(`Upload block blob ${blobName} successfully`, uploadBlobResponse.requestId);
+    //                 // After successful upload, delete the local file
+
+    //                 fs.unlink(imageTobeUplaoded.filePath, (err) => {
+    //                     if (err) {
+    //                         console.error("Error deleting local file:", err);
+    //                     } else {
+    //                         console.log("Local file deleted successfully");
+    //                     }
+    //                 });
+    //                 // Return the URL of the uploaded file
+    //                 const fileUrl = `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.CONTAINER_NAME}/${blobName}`;
+    //                 console.log("File uploaded to Azure Blob Storage successfully:", fileUrl);
+
+    //                 if (user.profilePic) {
+    //                     const filenamesplit = user.profilePic[0].split('/');
+    //                     console.log("filename split is ", filenamesplit);
+    //                     const filename = filenamesplit[filenamesplit.length - 1];
+    //                     console.log("filename is ", filename);
+    //                     const filenameWithDirectory = `profile-pic-storage/${filename}`
+    //                     console.log("filename with directory is ", filenameWithDirectory);
+    //                     const blockBlobClient = containerClient.getBlockBlobClient(filenameWithDirectory);  
+
+    //                     try {
+    //                         const deleteResponse = await blockBlobClient.deleteIfExists();
+    //                         // console.log(`Deleted old profile picture: ${oldFileName}`, deleteResponse);
+    //                     } catch (error) {
+    //                         console.error("Error deleting old profile picture:", error);
+    //                     }
+    //                 }
+
+    //                 // push the file URL to the user profile
+    //                 // let profilePic = user.profilePic || [];
+    //                 // profilePic.push(fileUrl);
+    //                 user.profilePic = [fileUrl];
+    //                 await user.save();
+    //                 // Respond with the file URL and other details
+
+    //                 res.status(200).json({
+    //                     message: 'File uploaded successfully',
+    //                     fileName: imageFileName,
+    //                     fileUrl: fileUrl,
+    //                     mimetype: imageTobeUplaoded.mimetype
+    //                 });
+
+    //             } catch (error) {
+    //                 console.error("Error in file upload:", error);
+    //                 res.status(500).json({ message: 'Internal Server Error' });
+
+    //             }
+    //         });
+    //         req.pipe(busboyHeader); // Pipe the request to busboy to parse the multipart/form-data
+    //         return;
+    //     }
+    //     catch (error) {
+    //         console.error("Error in uploadProfilePicture:", error);
+    //         res.status(500).json({ message: 'Internal Server Error' });
+    //         return;
+    //     }
+    // }
 
     // static async uploadProfilePicture(req: Request, res: Response) {
     //     try {
