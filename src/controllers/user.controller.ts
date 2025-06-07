@@ -88,20 +88,27 @@ class UserController {
 
                     if (user.profilePic) {
                         const blobClient = BlobServiceClient.fromConnectionString(process.env.CONTAINER_CONNECTION_STRING || '');
-                        const containerclient = blobClient.getContainerClient(process.env.CONTAINER_NAME || 'profile-pic-storage');
+                        const containerclient = blobClient.getContainerClient(process.env.CONTAINER_NAME || 'wanderconnect');
                         // const blobName = `${process.env.DIRECTORY}/${user.profilePic[0] || ''}`;
                         const oldFileUrl = user.profilePic[0];
                         const urlParts = oldFileUrl.split('/');
-                        // console.log("urlParts are ", urlParts);
+                        console.log("urlParts are ", urlParts);
                         const oldFileName = urlParts[urlParts.length - 1];
-                        // console.log("old file name is ", oldFileName);
+                        console.log("old file name is ", oldFileName);
                         const blobName = `${process.env.DIRECTORY}/${oldFileName}`;
                         // console.log("old file url is ", oldFileUrl);
-                        // console.log("blob name is ", blobName);
+                        console.log("blob name is ", blobName);
                         const blockBlobClient = containerclient.getBlockBlobClient(blobName);
-                        // console.log("blockBlobClient is ", blockBlobClient);
+                        console.log("blockBlobClient is ", blockBlobClient);
                         // Delete the old profile picture from Azure Blob Storage
-                        await blockBlobClient.deleteIfExists();
+                        try{
+
+                            const deleteResponse = await blockBlobClient.deleteIfExists();
+                            console.log(`Deleted old profile picture: ${oldFileName}`, deleteResponse);
+                        }
+                        catch(error){
+                            console.error("Error deleting old profile picture:", error);
+                        }
                     }
                     // push the file URL to the user profile
                     // let profilePic = user.profilePic || [];
