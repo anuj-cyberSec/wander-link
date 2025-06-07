@@ -140,7 +140,12 @@ const UserSchema = new mongoose_1.Schema({
                 iconUrl: { type: String }
             }],
     },
-    profilePic: { type: Array, default: [] }, // Array to store multiple profile picture URLs
+    // profilePic: {type: Array, default: [], }, // Array to store multiple profile picture URLs and limit the array size to 3
+    profilePic: { type: [String], validate: {
+            validator: function (v) {
+                return v.length <= 1; // Limit the array size to 3
+            }
+        }, message: "You can only upload up to 3 profile pictures." },
     location: {
         type: { type: String, enum: ["Point"] },
         coordinates: { type: [Number], index: "2dsphere" }
