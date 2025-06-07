@@ -86,6 +86,23 @@ class UserController {
                     const fileUrl = `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.CONTAINER_NAME}/${blobName}`;
                     console.log("File uploaded to Azure Blob Storage successfully:", fileUrl);
 
+                    if (user.profilePic) {
+                        const blobClient = BlobServiceClient.fromConnectionString(process.env.CONTAINER_CONNECTION_STRING || '');
+                        const containerclient = blobClient.getContainerClient(process.env.CONTAINER_NAME || 'profile-pic-storage');
+                        // const blobName = `${process.env.DIRECTORY}/${user.profilePic[0] || ''}`;
+                        const oldFileUrl = user.profilePic[0];
+                        const urlParts = oldFileUrl.split('/');
+                        console.log("urlParts are ", urlParts);
+                        const oldFileName = urlParts[urlParts.length - 1];
+                        console.log("old file name is ", oldFileName);
+                        const blobName = `${process.env.DIRECTORY}/${oldFileName}`;
+                        console.log("old file url is ", oldFileUrl);
+                        console.log("blob name is ", blobName);
+                        const blockBlobClient = containerclient.getBlockBlobClient(blobName);
+                        console.log("blockBlobClient is ", blockBlobClient);
+                        // Delete the old profile picture from Azure Blob Storage
+                        await blockBlobClient.deleteIfExists();
+                    }
                     // push the file URL to the user profile
                     // let profilePic = user.profilePic || [];
                     // profilePic.push(fileUrl);
