@@ -9,6 +9,8 @@ const app = express();
 const port = 5000;
 app.use(cors());
 app.use(express.json());
+// allow 5mb file uploads
+app.use(express.urlencoded({extended: true, limit: '5mb'}));
 connectDb();
 
 app.get('/', (req: Request, res: Response) => {
