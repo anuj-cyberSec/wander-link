@@ -34,8 +34,8 @@ class UserController {
             let imageFileName: string;
             let imageTobeUplaoded: { filePath?: string; mimetype?: string } = {};
             busboyHeader.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, mimetype: string) => {
-                console.log("file is ", file);
-                console.log("filename is ", filename);
+                // console.log("file is ", file);
+                // console.log("filename is ", filename);
                 // Generate a unique filename using UUID
                 // const uniqueFileName = `${Date.now()}-${filename}`;
                 const actualFileName = (filename && typeof filename === 'object' && filename.filename)
@@ -58,7 +58,7 @@ class UserController {
                         res.status(400).json({ message: 'No file uploaded' });
                         return;
                     }
-                    console.log("imageTobeUplaoded is ", imageTobeUplaoded);
+                    // console.log("imageTobeUplaoded is ", imageTobeUplaoded);
 
 
                     // uploading the file to azure blob storage
@@ -92,14 +92,14 @@ class UserController {
                         // const blobName = `${process.env.DIRECTORY}/${user.profilePic[0] || ''}`;
                         const oldFileUrl = user.profilePic[0];
                         const urlParts = oldFileUrl.split('/');
-                        console.log("urlParts are ", urlParts);
+                        // console.log("urlParts are ", urlParts);
                         const oldFileName = urlParts[urlParts.length - 1];
-                        console.log("old file name is ", oldFileName);
+                        // console.log("old file name is ", oldFileName);
                         const blobName = `${process.env.DIRECTORY}/${oldFileName}`;
-                        console.log("old file url is ", oldFileUrl);
-                        console.log("blob name is ", blobName);
+                        // console.log("old file url is ", oldFileUrl);
+                        // console.log("blob name is ", blobName);
                         const blockBlobClient = containerclient.getBlockBlobClient(blobName);
-                        console.log("blockBlobClient is ", blockBlobClient);
+                        // console.log("blockBlobClient is ", blockBlobClient);
                         // Delete the old profile picture from Azure Blob Storage
                         await blockBlobClient.deleteIfExists();
                     }
