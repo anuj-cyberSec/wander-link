@@ -8,7 +8,7 @@ import Trip from '../models/trip.model';
 import Swipe from '../models/swipe.model';
 import { ISwipe } from '../models/swipe.model'
 
-
+import deleteOldProfilePic from '../utils/delete';
 import busboy from 'busboy';
 import path from 'path';
 import fs from 'fs';
@@ -74,24 +74,41 @@ class UserController {
                 const fileUrl = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/${blobName}`;
                 console.log("File uploaded successfully:", fileUrl);
 
-                // Delete the old profile pic if it exists
-                const oldUrl = user.profilePic?.[0];
-                if (oldUrl) {
-                    const expectedPrefix = `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.CONTAINER_NAME}/`;
-                    const blobToDelete = oldUrl.startsWith(expectedPrefix)
-                        ? oldUrl.slice(expectedPrefix.length)
-                        : '';
-
-                    if (blobToDelete) {
-                        try {
-                            const oldBlobClient = containerClient.getBlockBlobClient(blobToDelete);
-                            await oldBlobClient.deleteIfExists(); // ✅ correct method
-                            console.log('Old profile picture deleted successfully');
-                        } catch (err) {
-                            console.error('Error deleting old profile picture:', err);
-                        }
-                    }
+                const filesplit = fileUrl.split('/');
+                const filename = filesplit[filesplit.length - 1];
+                console.log("filename is ", filename);
+                console.log(`complete name is profile-pic-storage/${filename}`);
+                if (user.profilePic && user.profilePic.length > 0) {
+                    console.log("user profilePic is ", user.profilePic);
+                    const resultDeletion = await deleteOldProfilePic(`profile-pic-storage/${filename}`);
+                    console.log("result of deletion is ", resultDeletion);
                 }
+                // Delete the old profile picture if it exists
+                // Delete the old profile pic if it exists
+                // if (user.profilePic && user.profilePic.length > 0) {
+                //     const oldUrl = user.profilePic[0];
+                //     // Extract the path after the container name
+                //     const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
+                //     const oldBlobPath = oldUrl.startsWith(urlPrefix)
+                //         ? oldUrl.slice(urlPrefix.length)
+                //         : ""; // fallback if URL is somehow wrong
+
+                //     if (!oldBlobPath) {
+                //         console.error("Invalid old profilePic URL format");
+                //     } else {
+                //         const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
+                //         try {
+                //             const deleteResponse = await oldBlobClient.deleteIfExists();
+                //             if (deleteResponse.succeeded) {
+                //                 console.log("Old profile picture deleted successfully");
+                //             } else {
+                //                 console.log("Old picture not found or already deleted");
+                //             }
+                //         } catch (err) {
+                //             console.error("Error deleting old profile picture:", err);
+                //         }
+                //     }
+                // }
 
 
                 // Update user record

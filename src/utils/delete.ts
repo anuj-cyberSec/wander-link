@@ -2,13 +2,16 @@ import { BlobServiceClient } from "@azure/storage-blob";
 require("dotenv").config();
 
 const CONTAINER_CONNECTION_STRING = process.env.CONTAINER_CONNECTION_STRING || "";
-const CONTAINER_NAME = process.env.CONTAINER_NAME || "profile-pic-storage";
+const CONTAINER_NAME = process.env.CONTAINER_NAME || "";
+console.log("contaienr name is ", CONTAINER_NAME);
 
 const blobServiceClient = BlobServiceClient.fromConnectionString(CONTAINER_CONNECTION_STRING);
 const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
 
 async function deleteOldProfilePic(blobName: string) {
   try {
+    console.log("Deleting old profile picture:", blobName);
+    console.log("blob name in bytes ", [...blobName])
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     const deleteResponse = await blockBlobClient.deleteIfExists();
     if (deleteResponse.succeeded) {
@@ -22,4 +25,5 @@ async function deleteOldProfilePic(blobName: string) {
 }
 
 // Usage example
-deleteOldProfilePic("profile-pic-storage/1749320741261-test-image-5mb.jpg");
+// deleteOldProfilePic("profile-pic-storage/1749364949554.jpg");
+export default deleteOldProfilePic;
