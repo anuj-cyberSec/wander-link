@@ -48,6 +48,10 @@ class UserController {
                 bb.on("file", (_fieldname, file, filename, encoding, fileMimeType) => {
                     const safeFilename = typeof filename === "string" ? filename : filename === null || filename === void 0 ? void 0 : filename.filename;
                     const extension = path_1.default.extname(safeFilename);
+                    if (extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png" && extension !== ".heic") {
+                        res.status(400).json({ message: "Invalid file type. Only .jpg, .jpeg, .png, and .heic are allowed." });
+                        return;
+                    }
                     const uniqueFileName = `${Date.now() / 1000}${extension}`;
                     imageFileName = uniqueFileName;
                     const filePath = path_1.default.join(__dirname, "..", "TempUploads", uniqueFileName);

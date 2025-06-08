@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { Request, Response } from 'express';
+import e, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import User from '../models/user.model';
 import Trip from '../models/trip.model';
@@ -38,14 +38,18 @@ class UserController {
                 return;
 
             }
-
+            
             const bb = busboy({ headers: req.headers });
             let imageFileName = "";
             let imageToUpload: { filePath?: string; mimetype?: string } = {};
-
+            
             bb.on("file", (_fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, fileMimeType: string) => {
                 const safeFilename = typeof filename === "string" ? filename : filename?.filename;
                 const extension = path.extname(safeFilename);
+                if(extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png" && extension !== ".heic") {
+                    res.status(400).json({ message: "Invalid file type. Only .jpg, .jpeg, .png, and .heic are allowed." });
+                    return;
+                }
                 const uniqueFileName = `${Date.now()/1000}${extension}`;
                 imageFileName = uniqueFileName;
 
