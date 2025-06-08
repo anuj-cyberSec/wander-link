@@ -46,7 +46,7 @@ class UserController {
             bb.on("file", (_fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, fileMimeType: string) => {
                 const safeFilename = typeof filename === "string" ? filename : filename?.filename;
                 const extension = path.extname(safeFilename);
-                const uniqueFileName = `${Date.now()}${extension}`;
+                const uniqueFileName = `${Date.now()/1000}${extension}`;
                 imageFileName = uniqueFileName;
 
                 const filePath = path.join(__dirname, "..", "TempUploads", uniqueFileName);

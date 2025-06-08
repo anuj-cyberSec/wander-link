@@ -48,7 +48,7 @@ class UserController {
                 bb.on("file", (_fieldname, file, filename, encoding, fileMimeType) => {
                     const safeFilename = typeof filename === "string" ? filename : filename === null || filename === void 0 ? void 0 : filename.filename;
                     const extension = path_1.default.extname(safeFilename);
-                    const uniqueFileName = `${Date.now()}${extension}`;
+                    const uniqueFileName = `${Date.now() / 1000}${extension}`;
                     imageFileName = uniqueFileName;
                     const filePath = path_1.default.join(__dirname, "..", "TempUploads", uniqueFileName);
                     imageToUpload = { filePath, mimetype: fileMimeType };
