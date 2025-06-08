@@ -637,7 +637,7 @@ class UserController {
             }
 
             const user = await User.findById(userId);
-            console.log("user is ", user);
+            // console.log("user is ", user);
             if (!user) {
                 res.status(404).json({ message: 'user not found' });
                 return;
@@ -668,18 +668,24 @@ class UserController {
             user.aboutMe.physicalInfo = physicalInfo || user.aboutMe.physicalInfo;
             // user.aboutMe.hobbiesInterest = hobbiesInterest || user.aboutMe.hobbiesInterest;
             // user.aboutMe.funIcebreakerTag = funIcebreakerTag || user.aboutMe.funIcebreakerTag;
-            user.profilePic = profilePic || user.profilePic;
+            // user.profilePic = Array.isArray(profilePic) || user.profilePic;
+            if(profilePic){
+                user.profilePic = Array.isArray(profilePic) ? [profilePic[0]] : [profilePic];
+            }
             user.location = location || user.location;
             user.languageSpoken = languageSpoken || user.languageSpoken;
             // user.budget = budget || user.budget;
             // user.travelStyle = travelStyle || user.travelStyle;
 
+            console.log("user is ", user);
             await user.save();
+            console.log("hello ")
             res.status(200).json({ messsage: "user updated successfully" });
             return;
 
         }
         catch (error) {
+            console.error("Error in createProfile:", error);
             res.status(500).json({ message: 'Internal Server Error' });
             return;
         }
