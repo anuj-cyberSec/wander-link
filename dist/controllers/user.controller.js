@@ -356,17 +356,22 @@ class UserController {
                 const maxDistanceInMeters = 1000000;
                 // Debug logging
                 console.log("Searching for trips within", maxDistanceInMeters, "meters of coordinates:", user.location.coordinates);
-                // const matchStage: any = {
-                //     "creator.location": {
-                //         $geoWithin: {
-                //             $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
-                //         }
-                //     }
-                // };
+                let matchStage = {};
+                if (loc) {
+                    matchStage = {
+                        "travellingFrom": loc
+                    };
+                }
+                else {
+                    matchStage = {
+                        "creator.location": {
+                            $geoWithin: {
+                                $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
+                            }
+                        }
+                    };
+                }
                 // loc should match the travellingFrom in trip collection
-                const matchStage = {
-                    "travellingFrom": loc
-                };
                 if (gender) {
                     matchStage["creator.gender"] = gender;
                 }

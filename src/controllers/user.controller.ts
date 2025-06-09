@@ -411,18 +411,24 @@ class UserController {
             // Debug logging
             console.log("Searching for trips within", maxDistanceInMeters, "meters of coordinates:", user.location.coordinates);
 
-            // const matchStage: any = {
-            //     "creator.location": {
-            //         $geoWithin: {
-            //             $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
-            //         }
-            //     }
-            // };
+            let matchStage: any = {};
+            if (loc) {
+                matchStage = {
+                    "travellingFrom": loc
+                };
+            }
+            else {
+                matchStage = {
+                    "creator.location": {
+                        $geoWithin: {
+                            $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
+                        }
+                    }
+                };
+            }
 
             // loc should match the travellingFrom in trip collection
-            const matchStage: any = {
-                "travellingFrom": loc
-            };
+
 
             if (gender) {
                 matchStage["creator.gender"] = gender;
@@ -434,8 +440,8 @@ class UserController {
                 matchStage["tripVibe.name"] = { $in: tripVibes };
             }
 
-            if(date){
-                matchStage["startDate"] = {$gte : new Date(date)}
+            if (date) {
+                matchStage["startDate"] = { $gte: new Date(date) }
             }
 
             const trips = await Trip.aggregate([
