@@ -38,19 +38,19 @@ class UserController {
                 return;
 
             }
-            
+
             const bb = busboy({ headers: req.headers });
             let imageFileName = "";
             let imageToUpload: { filePath?: string; mimetype?: string } = {};
-            
+
             bb.on("file", (_fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, fileMimeType: string) => {
                 const safeFilename = typeof filename === "string" ? filename : filename?.filename;
                 const extension = path.extname(safeFilename);
-                if(extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png" && extension !== ".heic") {
+                if (extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png" && extension !== ".heic") {
                     res.status(400).json({ message: "Invalid file type. Only .jpg, .jpeg, .png, and .heic are allowed." });
                     return;
                 }
-                const uniqueFileName = `${Date.now()/1000}${extension}`;
+                const uniqueFileName = `${Date.now() / 1000}${extension}`;
                 imageFileName = uniqueFileName;
 
                 const filePath = path.join(__dirname, "..", "TempUploads", uniqueFileName);
@@ -385,6 +385,7 @@ class UserController {
                 res.status(400).json({ error: 'Invalid userid' });
                 return;
             }
+
             const user = await User.findById(userId);
             console.log("user id is ", user?.id);
             // console.log(user?.location?.coordinates);
@@ -392,6 +393,8 @@ class UserController {
                 res.status(400).json({ error: 'user not found' });
                 return;
             }
+
+            const { loc, date, age, gender, tripVibes } = req.body.filteredTrip;
 
             // applying aggregation pipeline to fetch start date, end date, tripvibe, description, destination, from trip collection
             // and aboutMe , profilePic, name, gender, age, from user collection
@@ -408,6 +411,33 @@ class UserController {
             // Debug logging
             console.log("Searching for trips within", maxDistanceInMeters, "meters of coordinates:", user.location.coordinates);
 
+            // const matchStage: any = {
+            //     "creator.location": {
+            //         $geoWithin: {
+            //             $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
+            //         }
+            //     }
+            // };
+
+            // loc should match the travellingFrom in trip collection
+            const matchStage: any = {
+                "travellingFrom": loc
+            };
+
+            if (gender) {
+                matchStage["creator.gender"] = gender;
+            }
+            if (age && age.min !== undefined && age.max !== undefined) {
+                matchStage["creator.age"] = { $gte: age.min, $lte: age.max };
+            }
+            if (tripVibes && Array.isArray(tripVibes) && tripVibes.length > 0) {
+                matchStage["tripVibe.name"] = { $in: tripVibes };
+            }
+
+            if(date){
+                matchStage["startDate"] = {$gte : new Date(date)}
+            }
+
             const trips = await Trip.aggregate([
                 {
                     $lookup: {
@@ -423,14 +453,18 @@ class UserController {
                         preserveNullAndEmptyArrays: true
                     }
                 },
+                // {
+                //     $match: {
+                //         "creator.location": {
+                //             $geoWithin: {
+                //                 $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
+                //             }
+                //         }
+                //     }
+                // },
+
                 {
-                    $match: {
-                        "creator.location": {
-                            $geoWithin: {
-                                $centerSphere: [user.location.coordinates, maxDistanceInMeters / EARTH_RADIUS_IN_METERS]
-                            }
-                        }
-                    }
+                    $match: matchStage
                 },
                 {
                     $project: {
@@ -669,7 +703,7 @@ class UserController {
             // user.aboutMe.hobbiesInterest = hobbiesInterest || user.aboutMe.hobbiesInterest;
             // user.aboutMe.funIcebreakerTag = funIcebreakerTag || user.aboutMe.funIcebreakerTag;
             // user.profilePic = Array.isArray(profilePic) || user.profilePic;
-            if(profilePic){
+            if (profilePic) {
                 user.profilePic = Array.isArray(profilePic) ? [profilePic[0]] : [profilePic];
             }
             user.location = location || user.location;
