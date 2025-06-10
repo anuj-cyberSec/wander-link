@@ -55,6 +55,7 @@ interface IUser extends Document {
         state?: string;
         country?: string;
         zipCode?: string;
+        countryCode?: string;
     };
     tripIds?: Schema.Types.ObjectId[];
     languageSpoken?: string[];
@@ -192,7 +193,8 @@ address: {
     city: { type: String },
     state: { type: String },
     country: { type: String },
-    zipCode: { type: String }
+    zipCode: { type: String },
+    countryCode : {type: String}
 },
 // trips: { type: [String] },
 tripIds: [{ type: Schema.Types.ObjectId, ref: "Trip" }],

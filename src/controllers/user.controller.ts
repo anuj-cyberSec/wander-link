@@ -22,6 +22,65 @@ const STORAGE_ACCOUNT = process.env.STORAGE_ACCOUNT!;
 
 class UserController {
 
+    static async location(req: Request, res: Response) {
+        try {
+            const userId = (req as any).user.id;
+            if (!userId) {
+                res.status(400).json({ message: 'Invalid userId' });
+                return;
+            }
+
+            const user = await User.findById(userId);
+            if (!user) {
+                res.status(404).json({ message: 'User not found' });
+                return;
+            }
+
+            // const { longitude, latitude } = req.body;
+            const longitude = parseFloat(req.body.longitude);
+            const latitude = parseFloat(req.body.latitude);
+
+            if (!longitude || !latitude || isNaN(longitude) || isNaN(latitude)) {
+                res.status(400).json({ message: 'Longitude and latitude are required' });
+                return;
+            }
+
+            if(latitude === user.location?.coordinates[1] && longitude === user.location?.coordinates[0]) {
+                res.status(200).json({message: 'Location is already updated', location: user.address?.city});
+                return;
+            }
+
+            user.location = {
+                type: "Point",
+                coordinates: [longitude, latitude]
+            };
+
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+
+            const resp = await response.json();
+            // print city, state, country, zipCode
+            console.log("response is ", resp.address);
+
+            user.address = {
+                street : resp.address?.residential || "",
+                city: resp.address?.suburb || resp.address?.county,
+                state : resp.address?.state ,
+                country: resp.address?.country,
+                zipCode: resp.address?.postcode,
+                countryCode: resp.address?.country_code 
+            }
+
+            await user.save();
+            res.status(200).json({ message: 'Location updated successfully' , location : user.address?.city});
+            return;
+        }
+        catch (error) {
+            console.error("Error in location:", error);
+            res.status(500).json({ message: 'Internal Server Error' });
+            return;
+        }
+    }
+
     static async uploadProfilePicture(req: Request, res: Response) {
         try {
             const userId = (req as any).user?.id;
@@ -394,7 +453,8 @@ class UserController {
                 return;
             }
 
-            const { loc, date, age, gender, tripVibes } = req.body.filteredTrip;
+            const { filteredTrip = {} } = req.body;
+            const { loc, date, age, gender, tripVibes } = filteredTrip;
 
             // applying aggregation pipeline to fetch start date, end date, tripvibe, description, destination, from trip collection
             // and aboutMe , profilePic, name, gender, age, from user collection
@@ -492,7 +552,7 @@ class UserController {
             ]);
 
             // Debug logging
-            // console.log("Found trips:", trips.length);
+            console.log("Found trips:", trips.length);
             if (trips.length > 0) {
                 console.log("Sample trip creator:", trips[0].creator);
             }

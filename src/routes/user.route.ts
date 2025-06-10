@@ -7,6 +7,7 @@ const router = express.Router();
 
 const userController = new UserController();
 
+router.post('/location', authentication, UserController.location);
 router.post('/profile-upload', authentication, UserController.uploadProfilePicture)
 // router.post('/getUsers', authentication, UserController.getUsers);
 router.post('/homepage', authentication, UserController.homepage);

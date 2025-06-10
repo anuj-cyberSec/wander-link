@@ -28,6 +28,58 @@ const CONTAINER_NAME = process.env.CONTAINER_NAME;
 const DIRECTORY = process.env.DIRECTORY;
 const STORAGE_ACCOUNT = process.env.STORAGE_ACCOUNT;
 class UserController {
+    static location(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+            try {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                const user = yield user_model_1.default.findById(userId);
+                if (!user) {
+                    res.status(404).json({ message: 'User not found' });
+                    return;
+                }
+                // const { longitude, latitude } = req.body;
+                const longitude = parseFloat(req.body.longitude);
+                const latitude = parseFloat(req.body.latitude);
+                if (!longitude || !latitude || isNaN(longitude) || isNaN(latitude)) {
+                    res.status(400).json({ message: 'Longitude and latitude are required' });
+                    return;
+                }
+                if (latitude === ((_a = user.location) === null || _a === void 0 ? void 0 : _a.coordinates[1]) && longitude === ((_b = user.location) === null || _b === void 0 ? void 0 : _b.coordinates[0])) {
+                    res.status(200).json({ message: 'Location is already updated', location: (_c = user.address) === null || _c === void 0 ? void 0 : _c.city });
+                    return;
+                }
+                user.location = {
+                    type: "Point",
+                    coordinates: [longitude, latitude]
+                };
+                const response = yield fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                const resp = yield response.json();
+                // print city, state, country, zipCode
+                console.log("response is ", resp.address);
+                user.address = {
+                    street: ((_d = resp.address) === null || _d === void 0 ? void 0 : _d.residential) || "",
+                    city: ((_e = resp.address) === null || _e === void 0 ? void 0 : _e.suburb) || ((_f = resp.address) === null || _f === void 0 ? void 0 : _f.county),
+                    state: (_g = resp.address) === null || _g === void 0 ? void 0 : _g.state,
+                    country: (_h = resp.address) === null || _h === void 0 ? void 0 : _h.country,
+                    zipCode: (_j = resp.address) === null || _j === void 0 ? void 0 : _j.postcode,
+                    countryCode: (_k = resp.address) === null || _k === void 0 ? void 0 : _k.country_code
+                };
+                yield user.save();
+                res.status(200).json({ message: 'Location updated successfully', location: (_l = user.address) === null || _l === void 0 ? void 0 : _l.city });
+                return;
+            }
+            catch (error) {
+                console.error("Error in location:", error);
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
     static uploadProfilePicture(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
@@ -344,7 +396,8 @@ class UserController {
                     res.status(400).json({ error: 'user not found' });
                     return;
                 }
-                const { loc, date, age, gender, tripVibes } = req.body.filteredTrip;
+                const { filteredTrip = {} } = req.body;
+                const { loc, date, age, gender, tripVibes } = filteredTrip;
                 // applying aggregation pipeline to fetch start date, end date, tripvibe, description, destination, from trip collection
                 // and aboutMe , profilePic, name, gender, age, from user collection
                 if (!user || !user.location || !user.location.coordinates) {
@@ -430,7 +483,7 @@ class UserController {
                     }
                 ]);
                 // Debug logging
-                // console.log("Found trips:", trips.length);
+                console.log("Found trips:", trips.length);
                 if (trips.length > 0) {
                     console.log("Sample trip creator:", trips[0].creator);
                 }

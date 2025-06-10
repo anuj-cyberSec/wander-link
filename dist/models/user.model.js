@@ -155,7 +155,8 @@ const UserSchema = new mongoose_1.Schema({
         city: { type: String },
         state: { type: String },
         country: { type: String },
-        zipCode: { type: String }
+        zipCode: { type: String },
+        countryCode: { type: String }
     },
     // trips: { type: [String] },
     tripIds: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Trip" }],
