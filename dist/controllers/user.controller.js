@@ -30,7 +30,7 @@ const STORAGE_ACCOUNT = process.env.STORAGE_ACCOUNT;
 class UserController {
     static location(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
             try {
                 const userId = req.user.id;
                 if (!userId) {
@@ -62,15 +62,29 @@ class UserController {
                 // print city, state, country, zipCode
                 console.log("response is ", resp.address);
                 user.address = {
-                    street: ((_d = resp.address) === null || _d === void 0 ? void 0 : _d.residential) || "",
-                    city: ((_e = resp.address) === null || _e === void 0 ? void 0 : _e.suburb) || ((_f = resp.address) === null || _f === void 0 ? void 0 : _f.county),
-                    state: (_g = resp.address) === null || _g === void 0 ? void 0 : _g.state,
-                    country: (_h = resp.address) === null || _h === void 0 ? void 0 : _h.country,
-                    zipCode: (_j = resp.address) === null || _j === void 0 ? void 0 : _j.postcode,
-                    countryCode: (_k = resp.address) === null || _k === void 0 ? void 0 : _k.country_code
+                    street: ((_d = resp.address) === null || _d === void 0 ? void 0 : _d.residential)
+                        || ((_e = resp.address) === null || _e === void 0 ? void 0 : _e.road)
+                        || ((_f = resp.address) === null || _f === void 0 ? void 0 : _f.neighbourhood)
+                        || "",
+                    city: ((_g = resp.address) === null || _g === void 0 ? void 0 : _g.city)
+                        || ((_h = resp.address) === null || _h === void 0 ? void 0 : _h.town)
+                        || ((_j = resp.address) === null || _j === void 0 ? void 0 : _j.village)
+                        || ((_k = resp.address) === null || _k === void 0 ? void 0 : _k.suburb)
+                        || ((_l = resp.address) === null || _l === void 0 ? void 0 : _l.county)
+                        || ((_m = resp.address) === null || _m === void 0 ? void 0 : _m.neighbourhood)
+                        || ((_o = resp.address) === null || _o === void 0 ? void 0 : _o.state_district)
+                        || ((_p = resp.address) === null || _p === void 0 ? void 0 : _p.state)
+                        || ((_q = resp.address) === null || _q === void 0 ? void 0 : _q.country)
+                        || "",
+                    state: ((_r = resp.address) === null || _r === void 0 ? void 0 : _r.state_district)
+                        || ((_s = resp.address) === null || _s === void 0 ? void 0 : _s.state)
+                        || "",
+                    country: (_t = resp.address) === null || _t === void 0 ? void 0 : _t.country,
+                    zipCode: (_u = resp.address) === null || _u === void 0 ? void 0 : _u.postcode,
+                    countryCode: (_v = resp.address) === null || _v === void 0 ? void 0 : _v.country_code
                 };
                 yield user.save();
-                res.status(200).json({ message: 'Location updated successfully', location: (_l = user.address) === null || _l === void 0 ? void 0 : _l.city });
+                res.status(200).json({ message: 'Location updated successfully', location: (_w = user.address) === null || _w === void 0 ? void 0 : _w.city });
                 return;
             }
             catch (error) {

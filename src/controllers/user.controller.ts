@@ -45,8 +45,8 @@ class UserController {
                 return;
             }
 
-            if(latitude === user.location?.coordinates[1] && longitude === user.location?.coordinates[0]) {
-                res.status(200).json({message: 'Location is already updated', location: user.address?.city});
+            if (latitude === user.location?.coordinates[1] && longitude === user.location?.coordinates[0]) {
+                res.status(200).json({ message: 'Location is already updated', location: user.address?.city });
                 return;
             }
 
@@ -62,16 +62,30 @@ class UserController {
             console.log("response is ", resp.address);
 
             user.address = {
-                street : resp.address?.residential || "",
-                city: resp.address?.suburb || resp.address?.county,
-                state : resp.address?.state ,
+                street: resp.address?.residential
+                    || resp.address?.road
+                    || resp.address?.neighbourhood
+                    || "",
+                city: resp.address?.city
+                    || resp.address?.town
+                    || resp.address?.village
+                    || resp.address?.suburb
+                    || resp.address?.county
+                    || resp.address?.neighbourhood
+                    || resp.address?.state_district
+                    || resp.address?.state
+                    || resp.address?.country
+                    || "",
+                state: resp.address?.state_district
+                    || resp.address?.state
+                    || "",
                 country: resp.address?.country,
                 zipCode: resp.address?.postcode,
-                countryCode: resp.address?.country_code 
+                countryCode: resp.address?.country_code
             }
 
             await user.save();
-            res.status(200).json({ message: 'Location updated successfully' , location : user.address?.city});
+            res.status(200).json({ message: 'Location updated successfully', location: user.address?.city });
             return;
         }
         catch (error) {
