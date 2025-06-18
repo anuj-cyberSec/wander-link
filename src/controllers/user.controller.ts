@@ -90,7 +90,7 @@ class UserController {
         }
         catch (error) {
             console.error("Error in location:", error);
-            res.status(500).json({ message: 'Internal Server Error' });
+            res.status(500).json({ message: 'Internal Server Error', error: (error as any).message });
             return;
         }
     }
