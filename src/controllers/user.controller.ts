@@ -45,7 +45,9 @@ class UserController {
                 return;
             }
 
-            if (latitude === user.location?.coordinates[1] && longitude === user.location?.coordinates[0]) {
+            if (Array.isArray(user.location?.coordinates) &&
+                user.location.coordinates.length >= 2 && latitude === user.location?.coordinates[1] && longitude === user.location?.coordinates[0]) {
+                console.log("user location is already updated");
                 res.status(200).json({ message: 'Location is already updated', location: user.address?.city });
                 return;
             }
