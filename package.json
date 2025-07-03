@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@azure/communication-email": "^1.0.0",
+    "@azure/identity": "^4.10.1",
     "@azure/storage-blob": "^12.27.0",
     "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.17",
@@ -30,6 +32,16 @@
   },
   "scripts": {
     "start": "nodemon dist/server.js",
-    "script": "tsc && git status && git add ."
+    "script": "tsc && git status && git add .",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.0",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.30.0",
+    "globals": "^16.2.0",
+    "typescript-eslint": "^8.35.0"
   }
 }

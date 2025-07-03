@@ -1,8 +1,12 @@
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
+import { EmailClient, EmailMessage, EmailAddress } from "@azure/communication-email";
+
 const dotenv = require('dotenv');
 dotenv.config();
-// const Email = 'founders@wonderconnect.in'
-// const Password = 'wonder@connect_kunal&anuj'
+
+const connectionString = 'endpoint=https://communication-service-resourc.india.communication.azure.com/;accesskey=2sxYLhfrFTdLQbxDq9SpWlGjERda39Uq9Ch3bE9DPULZ5dgdMF96JQQJ99BFACULyCpFGMfoAAAAAZCSQZvA'
+const Email = 'founders@wonderconnect.in'
+const Password = 'wonder@connect_kunal&anuj'
  
  const generateOtpEmailTemplate = (otp: string) => {
     return `
@@ -27,29 +31,38 @@ dotenv.config();
 
 const sendEmail = async (to: string, subject: string, html: string) => {
     try {
-        // Create a transporter
-        const transporter = nodemailer.createTransport({
-            host: 'smtpout.secureserver.net', // GoDaddy SMTP server
-            port: 465, // SSL port
-            secure: true, // Use SSL
-            auth: {
-                user: process.env.Email,
-                pass: process.env.Password
+        const emailClient = new EmailClient(connectionString);
+
+        const emailMessage: EmailMessage = {
+            senderAddress: 'donotreply@wanderconnect.in', // Replace with your verified sender
+            content: {
+                subject: subject,
+                html: html
             },
-        });
-        console.log("transporter is ", transporter)
-        const mailOptions = {
-            from: 'tech@wanderconnect.in', // Sender address
-            to: to, // List of recipients
-            subject: subject,
-            html: html,
+            recipients: {
+                to: [
+                    {
+                        address: to,
+                        displayName: to.split('@')[0] // optional display name
+                    }
+                ]
+            }
         };
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
+
+        const poller = await emailClient.beginSend(emailMessage);
+        const response = await poller.pollUntilDone();
+
+        if (response.status === "Succeeded") {
+            console.log("Email sent successfully.");
+        } else {
+            console.error(`Failed to send email. Status: ${response.status}`);
+        }
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error sending email with Azure:', error);
     }
 };
  
 // export default sendEmail;
 export { sendEmail, generateOtpEmailTemplate };
+
+sendEmail("ansinghch@gmail.com", "test", "test")
