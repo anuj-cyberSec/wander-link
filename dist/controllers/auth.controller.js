@@ -134,7 +134,7 @@ class AuthController {
                 const newUser = new user_model_1.default({
                     email: email,
                     otp: otp,
-                    otpExpiry: new Date(Date.now() + 10 * 60 * 1000),
+                    otpExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
                     auth_provider: "email",
                 });
                 yield newUser.save();

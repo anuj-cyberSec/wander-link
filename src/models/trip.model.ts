@@ -53,6 +53,10 @@ import { v4 as uuidv4 } from 'uuid';
 interface ITrip extends Document {
     tripId: string;
     creator: Schema.Types.ObjectId;  // Refers to the User who created the trip
+    creatorLocation: {
+        type: "Point";
+        coordinates: [number, number];  // [longitude, latitude]
+    };
     destination: string;
     travellingFrom: string;
     startDate: Date;
@@ -77,6 +81,17 @@ const TripSchema: Schema<ITrip> = new Schema(
     {
         tripId: { type: String, default: () => uuidv4() },
         creator: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        creatorLocation: {
+            type: {
+                type: String,
+                enum: ["Point"],
+                required: true
+            },
+            coordinates: {
+                type: [Number],
+                required: true
+            }
+        },
         destination: { type: String, required: true, index: true },
         travellingFrom: { type: String, required: true },
         startDate: { type: Date, required: true, index: true },

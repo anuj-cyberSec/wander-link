@@ -30,8 +30,8 @@ const DIRECTORY = process.env.DIRECTORY;
 const STORAGE_ACCOUNT = process.env.STORAGE_ACCOUNT;
 class UserController {
     static location(req, res) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
             try {
                 const userId = req.user.id;
                 if (!userId) {
@@ -98,8 +98,8 @@ class UserController {
         });
     }
     static uploadProfilePicture(req, res) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             try {
                 const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
                 if (!userId) {
@@ -512,9 +512,118 @@ class UserController {
     //         res.status(500).json({ error: 'Internal server error' });
     //     }
     // }
+    // static async homepage(req: Request, res: Response) {
+    //     try {
+    //         const userId = (req as any).user.id;
+    //         if (!userId) {
+    //              res.status(400).json({ error: 'Invalid userid' });
+    //              return;
+    //         }
+    //         const user = await User.findById(userId);
+    //         if (!user || !user.location?.coordinates) {
+    //              res.status(400).json({ error: 'User location not found' });
+    //              return
+    //         }
+    //         const { filteredTrip = {} } = req.body;
+    //         const { loc, date, age, gender, tripVibes } = filteredTrip;
+    //         const maxDistanceInMeters = 1000000;
+    //         const userCoords = user.location.coordinates;
+    //         const earthRadiusInMeters = 6378100;
+    //         const radiusInRadians = maxDistanceInMeters / earthRadiusInMeters;
+    //         // const baseMatch: any = {};
+    //         const orFilter: any[] = [];
+    //         // if (gender) baseMatch["creator.gender"] = gender;
+    //         if(gender) orFilter.push({"creator.gender": gender});
+    //         if (age?.min !== undefined && age?.max !== undefined) {
+    //             // baseMatch["creator.age"] = { $gte: age.min, $lte: age.max };
+    //             orFilter.push({ "creator.age": { $gte: age.min, $lte: age.max } });
+    //         }
+    //         if (tripVibes?.length) {
+    //             // baseMatch["tripVibe.name"] = { $in: tripVibes };
+    //             orFilter.push({ "tripVibe.name": { $in: tripVibes } });
+    //         }
+    //         // if (date) baseMatch["startDate"] = { $gte: new Date(date) };
+    //         // if(date) orFilter.push({ "startDate": { $gte: new Date(date) } });
+    //         const baseMatch = orFilter.length ? { $or : orFilter } : {};
+    //         // === FIRST: GEO FILTERED SEARCH ===
+    //         const geoMatch = loc
+    //             ? { ...baseMatch, travellingFrom: loc }
+    //             : {
+    //                 ...baseMatch,
+    //                 "creator.location": {
+    //                     $geoWithin: {
+    //                         $centerSphere: [userCoords, radiusInRadians],
+    //                     },
+    //                 },
+    //             };
+    //         const aggregationStages = (matchStage: any) => [
+    //             {
+    //                 $lookup: {
+    //                     from: "userData",
+    //                     localField: "creator",
+    //                     foreignField: "_id",
+    //                     as: "creator",
+    //                 },
+    //             },
+    //             { $unwind: "$creator" },
+    //             { $match: matchStage },
+    //             {
+    //                 $project: {
+    //                     _id: 1,
+    //                     startDate: 1,
+    //                     endDate: 1,
+    //                     destination: 1,
+    //                     travellingFrom: 1,
+    //                     description: 1,
+    //                     tripVibe: 1,
+    //                     "creator._id": 1,
+    //                     "creator.name": 1,
+    //                     "creator.profilePic": 1,
+    //                     "creator.gender": 1,
+    //                     "creator.age": 1,
+    //                     "creator.aboutMe.personality": 1,
+    //                     "creator.location": 1,
+    //                 },
+    //             },
+    //         ];
+    //         // Step 1: Nearby Trips
+    //         let trips = await Trip.aggregate(aggregationStages(geoMatch));
+    //         console.log("Trips found in nearby search:", trips.length);
+    //         // now applying date filter on the trips
+    //         // only return those trips whose startDate is greater than or equal to the date provided in the request body
+    //         if (date) {
+    //             const dateMatch = { startDate: { $gte: new Date(date) } };
+    //             trips = await Trip.aggregate(aggregationStages({ ...geoMatch, ...dateMatch }));
+    //             if (trips.length > 0) {
+    //                  res.status(200).json(trips);
+    //                  return
+    //             }
+    //         }
+    //         if (trips.length > 0) {
+    //              res.status(200).json(trips);
+    //              return
+    //         }
+    //         console.log("n0t found");
+    //         // === FALLBACK: ALL TRIPS SORTED BY DISTANCE ===
+    //         const allTrips = await Trip.aggregate(aggregationStages(baseMatch));
+    //         const sortedTrips = allTrips
+    //             .filter(trip => trip.creator?.location?.coordinates)
+    //             .map(trip => ({
+    //                 ...trip,
+    //                 distance: haversine(userCoords, trip.creator.location.coordinates),
+    //             }))
+    //             .sort((a, b) => a.distance - b.distance);
+    //          res.status(200).json(sortedTrips);
+    //          return
+    //     } catch (error) {
+    //         console.error("Homepage error:", error);
+    //          res.status(500).json({ error: 'Internal server error' });
+    //          return
+    //     }
+    // }
     static homepage(req, res) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             try {
                 const userId = req.user.id;
                 if (!userId) {
@@ -528,35 +637,30 @@ class UserController {
                 }
                 const { filteredTrip = {} } = req.body;
                 const { loc, date, age, gender, tripVibes } = filteredTrip;
-                const maxDistanceInMeters = 1000000;
                 const userCoords = user.location.coordinates;
+                const maxDistanceInMeters = 1000000;
                 const earthRadiusInMeters = 6378100;
                 const radiusInRadians = maxDistanceInMeters / earthRadiusInMeters;
-                // const baseMatch: any = {};
+                // Build filters
                 const orFilter = [];
-                // if (gender) baseMatch["creator.gender"] = gender;
                 if (gender)
                     orFilter.push({ "creator.gender": gender });
                 if ((age === null || age === void 0 ? void 0 : age.min) !== undefined && (age === null || age === void 0 ? void 0 : age.max) !== undefined) {
-                    // baseMatch["creator.age"] = { $gte: age.min, $lte: age.max };
                     orFilter.push({ "creator.age": { $gte: age.min, $lte: age.max } });
                 }
                 if (tripVibes === null || tripVibes === void 0 ? void 0 : tripVibes.length) {
-                    // baseMatch["tripVibe.name"] = { $in: tripVibes };
                     orFilter.push({ "tripVibe.name": { $in: tripVibes } });
                 }
-                // if (date) baseMatch["startDate"] = { $gte: new Date(date) };
-                if (date)
-                    orFilter.push({ "startDate": { $gte: new Date(date) } });
                 const baseMatch = orFilter.length ? { $or: orFilter } : {};
-                // === FIRST: GEO FILTERED SEARCH ===
+                // Match logic based on whether user gave destination
                 const geoMatch = loc
-                    ? Object.assign(Object.assign({}, baseMatch), { travellingFrom: loc }) : Object.assign(Object.assign({}, baseMatch), { "creator.location": {
+                    ? Object.assign(Object.assign({}, baseMatch), { destination: loc }) : Object.assign(Object.assign({}, baseMatch), { creatorLocation: {
                         $geoWithin: {
                             $centerSphere: [userCoords, radiusInRadians],
                         },
                     } });
                 const aggregationStages = (matchStage) => [
+                    { $match: matchStage },
                     {
                         $lookup: {
                             from: "userData",
@@ -566,7 +670,6 @@ class UserController {
                         },
                     },
                     { $unwind: "$creator" },
-                    { $match: matchStage },
                     {
                         $project: {
                             _id: 1,
@@ -583,20 +686,32 @@ class UserController {
                             "creator.age": 1,
                             "creator.aboutMe.personality": 1,
                             "creator.location": 1,
+                            creatorLocation: 1
                         },
                     },
                 ];
-                // Step 1: Nearby Trips
+                // === First Search ===
                 let trips = yield trip_model_1.default.aggregate(aggregationStages(geoMatch));
+                console.log("Nearby trips count:", trips.length);
+                // Apply date filter (if any)
+                if (date) {
+                    const dateMatch = { startDate: { $gte: new Date(date) } };
+                    trips = yield trip_model_1.default.aggregate(aggregationStages(Object.assign(Object.assign({}, geoMatch), dateMatch)));
+                    if (trips.length > 0) {
+                        res.status(200).json(trips);
+                        return;
+                    }
+                }
+                // Return if found
                 if (trips.length > 0) {
                     res.status(200).json(trips);
                     return;
                 }
-                // === FALLBACK: ALL TRIPS SORTED BY DISTANCE ===
+                // === Fallback: show all matching trips, sorted by distance ===
                 const allTrips = yield trip_model_1.default.aggregate(aggregationStages(baseMatch));
                 const sortedTrips = allTrips
-                    .filter(trip => { var _a, _b; return (_b = (_a = trip.creator) === null || _a === void 0 ? void 0 : _a.location) === null || _b === void 0 ? void 0 : _b.coordinates; })
-                    .map(trip => (Object.assign(Object.assign({}, trip), { distance: (0, haversine_distance_1.default)(userCoords, trip.creator.location.coordinates) })))
+                    .filter(trip => { var _a; return (_a = trip.creatorLocation) === null || _a === void 0 ? void 0 : _a.coordinates; })
+                    .map(trip => (Object.assign(Object.assign({}, trip), { distance: (0, haversine_distance_1.default)(userCoords, trip.creatorLocation.coordinates) })))
                     .sort((a, b) => a.distance - b.distance);
                 res.status(200).json(sortedTrips);
                 return;
@@ -629,8 +744,9 @@ class UserController {
                 }
                 console.log("user object id is ", user._id);
                 const newTrip = new trip_model_1.default({
-                    destination, travellingFrom, startDate, endDate, description, budget, tripType, visibility, tripVibe, creator: user._id, participants: [user._id],
+                    destination, travellingFrom, startDate, endDate, description, budget, tripType, visibility, tripVibe, creator: user._id, participants: [user._id], creatorLocation: user.location,
                 });
+                console.log("new trip is ", newTrip);
                 yield newTrip.save();
                 res.send('Trip created successfully');
                 return;
@@ -885,15 +1001,15 @@ class UserController {
                 const lastswipe = yield swipe_model_1.default.findOne({
                     swiper: userId,
                     $or: [
-                        { accepted: { $exists: false } },
+                        { accepted: { $exists: false } }, // No accepted field
                         { accepted: false } // accepted is false
                     ]
                 })
                     .sort({ createdAt: 1 })
                     .populate({
-                    path: 'target',
+                    path: 'target', // Populate the target (which is a Trip)
                     populate: {
-                        path: 'creator',
+                        path: 'creator', // Populate the creator of the trip (User)
                         select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                     }
                 });
@@ -907,7 +1023,7 @@ class UserController {
                 const response = {
                     _id: lastswipe._id,
                     swiper: lastswipe.swiper,
-                    target: lastswipe.target,
+                    target: lastswipe.target, // The populated target (Trip) with the creator's data
                     direction: lastswipe.direction,
                     createdAt: lastswipe.createdAt,
                     __v: lastswipe.__v
@@ -940,7 +1056,7 @@ class UserController {
                     },
                     {
                         $lookup: {
-                            from: 'users',
+                            from: 'users', // Correct collection name for users
                             localField: 'creator',
                             foreignField: '_id',
                             as: 'creator'
@@ -992,9 +1108,9 @@ class UserController {
                 // fetching all the swipes of this user whose approved is true
                 const swipes = yield swipe_model_1.default.find({ swiper: userId, accepted: true })
                     .populate({
-                    path: 'target',
+                    path: 'target', // Populate the target (which is a Trip)
                     populate: {
-                        path: 'creator',
+                        path: 'creator', // Populate the creator of the trip (User)
                         select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                     }
                 })
@@ -1038,7 +1154,7 @@ class UserController {
                     // }
                 })
                     .populate({
-                    path: 'swiper',
+                    path: 'swiper', // Populate the swiper (User)
                     select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                 })
                     .sort({ createdAt: -1 }); // Sort by createdAt in descending order
