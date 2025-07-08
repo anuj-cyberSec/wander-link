@@ -532,17 +532,23 @@ class UserController {
                 const userCoords = user.location.coordinates;
                 const earthRadiusInMeters = 6378100;
                 const radiusInRadians = maxDistanceInMeters / earthRadiusInMeters;
-                const baseMatch = {};
+                // const baseMatch: any = {};
+                const orFilter = [];
+                // if (gender) baseMatch["creator.gender"] = gender;
                 if (gender)
-                    baseMatch["creator.gender"] = gender;
+                    orFilter.push({ "creator.gender": gender });
                 if ((age === null || age === void 0 ? void 0 : age.min) !== undefined && (age === null || age === void 0 ? void 0 : age.max) !== undefined) {
-                    baseMatch["creator.age"] = { $gte: age.min, $lte: age.max };
+                    // baseMatch["creator.age"] = { $gte: age.min, $lte: age.max };
+                    orFilter.push({ "creator.age": { $gte: age.min, $lte: age.max } });
                 }
                 if (tripVibes === null || tripVibes === void 0 ? void 0 : tripVibes.length) {
-                    baseMatch["tripVibe.name"] = { $in: tripVibes };
+                    // baseMatch["tripVibe.name"] = { $in: tripVibes };
+                    orFilter.push({ "tripVibe.name": { $in: tripVibes } });
                 }
+                // if (date) baseMatch["startDate"] = { $gte: new Date(date) };
                 if (date)
-                    baseMatch["startDate"] = { $gte: new Date(date) };
+                    orFilter.push({ "startDate": { $gte: new Date(date) } });
+                const baseMatch = orFilter.length ? { $or: orFilter } : {};
                 // === FIRST: GEO FILTERED SEARCH ===
                 const geoMatch = loc
                     ? Object.assign(Object.assign({}, baseMatch), { travellingFrom: loc }) : Object.assign(Object.assign({}, baseMatch), { "creator.location": {
