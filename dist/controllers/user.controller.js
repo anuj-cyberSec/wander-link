@@ -30,8 +30,8 @@ const DIRECTORY = process.env.DIRECTORY;
 const STORAGE_ACCOUNT = process.env.STORAGE_ACCOUNT;
 class UserController {
     static location(req, res) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
             try {
                 const userId = req.user.id;
                 if (!userId) {
@@ -98,8 +98,8 @@ class UserController {
         });
     }
     static uploadProfilePicture(req, res) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             try {
                 const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
                 if (!userId) {
@@ -513,8 +513,8 @@ class UserController {
     //     }
     // }
     static homepage(req, res) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             try {
                 const userId = req.user.id;
                 if (!userId) {
@@ -885,15 +885,15 @@ class UserController {
                 const lastswipe = yield swipe_model_1.default.findOne({
                     swiper: userId,
                     $or: [
-                        { accepted: { $exists: false } }, // No accepted field
+                        { accepted: { $exists: false } },
                         { accepted: false } // accepted is false
                     ]
                 })
                     .sort({ createdAt: 1 })
                     .populate({
-                    path: 'target', // Populate the target (which is a Trip)
+                    path: 'target',
                     populate: {
-                        path: 'creator', // Populate the creator of the trip (User)
+                        path: 'creator',
                         select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                     }
                 });
@@ -907,7 +907,7 @@ class UserController {
                 const response = {
                     _id: lastswipe._id,
                     swiper: lastswipe.swiper,
-                    target: lastswipe.target, // The populated target (Trip) with the creator's data
+                    target: lastswipe.target,
                     direction: lastswipe.direction,
                     createdAt: lastswipe.createdAt,
                     __v: lastswipe.__v
@@ -940,7 +940,7 @@ class UserController {
                     },
                     {
                         $lookup: {
-                            from: 'users', // Correct collection name for users
+                            from: 'users',
                             localField: 'creator',
                             foreignField: '_id',
                             as: 'creator'
@@ -992,9 +992,9 @@ class UserController {
                 // fetching all the swipes of this user whose approved is true
                 const swipes = yield swipe_model_1.default.find({ swiper: userId, accepted: true })
                     .populate({
-                    path: 'target', // Populate the target (which is a Trip)
+                    path: 'target',
                     populate: {
-                        path: 'creator', // Populate the creator of the trip (User)
+                        path: 'creator',
                         select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                     }
                 })
@@ -1038,7 +1038,7 @@ class UserController {
                     // }
                 })
                     .populate({
-                    path: 'swiper', // Populate the swiper (User)
+                    path: 'swiper',
                     select: 'name profilePic gender age aboutMe' // Select the fields you need from User
                 })
                     .sort({ createdAt: -1 }); // Sort by createdAt in descending order

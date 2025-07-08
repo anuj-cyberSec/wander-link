@@ -14,7 +14,12 @@ exports.generateOtpEmailTemplate = exports.sendEmail = void 0;
 const communication_email_1 = require("@azure/communication-email");
 const dotenv = require('dotenv');
 dotenv.config();
-const connectionString = 'endpoint=https://communication-service-resourc.india.communication.azure.com/;accesskey=2sxYLhfrFTdLQbxDq9SpWlGjERda39Uq9Ch3bE9DPULZ5dgdMF96JQQJ99BFACULyCpFGMfoAAAAAZCSQZvA';
+const connectionString = process.env.AZURE_COMMUNICATION_SERVICE_CONNECTION_STRING || "";
+console.log("Connection String:", connectionString);
+if (!connectionString) {
+    throw new Error("Azure Communication Service connection string is not set in the environment variables.");
+    // console.error("Azure Communication Service connection string is not set in the environment variables.");
+}
 const Email = 'founders@wonderconnect.in';
 const Password = 'wonder@connect_kunal&anuj';
 const generateOtpEmailTemplate = (otp) => {
@@ -42,7 +47,7 @@ const sendEmail = (to, subject, html) => __awaiter(void 0, void 0, void 0, funct
     try {
         const emailClient = new communication_email_1.EmailClient(connectionString);
         const emailMessage = {
-            senderAddress: 'donotreply@wanderconnect.in', // Replace with your verified sender
+            senderAddress: 'donotreply@wanderconnect.in',
             content: {
                 subject: subject,
                 html: html

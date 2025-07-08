@@ -15,7 +15,7 @@
     "@vercel/node": "^5.1.7",
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "firebase-admin": "^13.1.0",
     "haversine-distance": "^1.2.4",
