@@ -627,7 +627,7 @@ class UserController {
             try {
                 const userId = req.user.id;
                 if (!userId) {
-                    res.status(400).json({ error: 'Invalid userid' });
+                    res.status(400).json({ error: 'Invalid user ID' });
                     return;
                 }
                 const user = yield user_model_1.default.findById(userId);
@@ -637,30 +637,36 @@ class UserController {
                 }
                 const { filteredTrip = {} } = req.body;
                 const { loc, date, age, gender, tripVibes } = filteredTrip;
-                const userCoords = user.location.coordinates;
                 const maxDistanceInMeters = 1000000;
+                const userCoords = user.location.coordinates;
                 const earthRadiusInMeters = 6378100;
                 const radiusInRadians = maxDistanceInMeters / earthRadiusInMeters;
-                // Build filters
-                const orFilter = [];
-                if (gender)
-                    orFilter.push({ "creator.gender": gender });
+                // Build $or filters
+                const orFilters = [];
+                if (gender) {
+                    orFilters.push({ "creator.gender": gender });
+                }
                 if ((age === null || age === void 0 ? void 0 : age.min) !== undefined && (age === null || age === void 0 ? void 0 : age.max) !== undefined) {
-                    orFilter.push({ "creator.age": { $gte: age.min, $lte: age.max } });
+                    orFilters.push({ "creator.age": { $gte: age.min, $lte: age.max } });
                 }
                 if (tripVibes === null || tripVibes === void 0 ? void 0 : tripVibes.length) {
-                    orFilter.push({ "tripVibe.name": { $in: tripVibes } });
+                    orFilters.push({ "tripVibe.name": { $in: tripVibes } });
                 }
-                const baseMatch = orFilter.length ? { $or: orFilter } : {};
-                // Match logic based on whether user gave destination
-                const geoMatch = loc
-                    ? Object.assign(Object.assign({}, baseMatch), { destination: loc }) : Object.assign(Object.assign({}, baseMatch), { creatorLocation: {
-                        $geoWithin: {
-                            $centerSphere: [userCoords, radiusInRadians],
-                        },
-                    } });
+                if (date) {
+                    orFilters.push({ startDate: { $gte: new Date(date) } });
+                }
+                if (loc) {
+                    orFilters.push({ destination: loc }); // exact destination match
+                }
+                const finalMatch = orFilters.length ? { $or: orFilters } : {};
+                const geoMatch = !loc
+                    ? Object.assign(Object.assign({}, finalMatch), { creatorLocation: {
+                            $geoWithin: {
+                                $centerSphere: [userCoords, radiusInRadians],
+                            },
+                        } }) : finalMatch;
+                // Aggregation pipeline
                 const aggregationStages = (matchStage) => [
-                    { $match: matchStage },
                     {
                         $lookup: {
                             from: "userData",
@@ -670,6 +676,7 @@ class UserController {
                         },
                     },
                     { $unwind: "$creator" },
+                    { $match: matchStage },
                     {
                         $project: {
                             _id: 1,
@@ -679,6 +686,7 @@ class UserController {
                             travellingFrom: 1,
                             description: 1,
                             tripVibe: 1,
+                            creatorLocation: 1,
                             "creator._id": 1,
                             "creator.name": 1,
                             "creator.profilePic": 1,
@@ -686,34 +694,20 @@ class UserController {
                             "creator.age": 1,
                             "creator.aboutMe.personality": 1,
                             "creator.location": 1,
-                            creatorLocation: 1
                         },
                     },
                 ];
-                // === First Search ===
                 let trips = yield trip_model_1.default.aggregate(aggregationStages(geoMatch));
-                console.log("Nearby trips count:", trips.length);
-                // Apply date filter (if any)
-                if (date) {
-                    const dateMatch = { startDate: { $gte: new Date(date) } };
-                    trips = yield trip_model_1.default.aggregate(aggregationStages(Object.assign(Object.assign({}, geoMatch), dateMatch)));
-                    if (trips.length > 0) {
-                        res.status(200).json(trips);
-                        return;
-                    }
+                console.log("Trips found (OR logic):", trips.length);
+                // If still empty, fallback to all public trips sorted by distance
+                if (trips.length === 0) {
+                    const allTrips = yield trip_model_1.default.aggregate(aggregationStages({}));
+                    trips = allTrips
+                        .filter(trip => { var _a, _b; return (_b = (_a = trip.creator) === null || _a === void 0 ? void 0 : _a.location) === null || _b === void 0 ? void 0 : _b.coordinates; })
+                        .map(trip => (Object.assign(Object.assign({}, trip), { distance: (0, haversine_distance_1.default)(userCoords, trip.creator.location.coordinates) })))
+                        .sort((a, b) => a.distance - b.distance);
                 }
-                // Return if found
-                if (trips.length > 0) {
-                    res.status(200).json(trips);
-                    return;
-                }
-                // === Fallback: show all matching trips, sorted by distance ===
-                const allTrips = yield trip_model_1.default.aggregate(aggregationStages(baseMatch));
-                const sortedTrips = allTrips
-                    .filter(trip => { var _a; return (_a = trip.creatorLocation) === null || _a === void 0 ? void 0 : _a.coordinates; })
-                    .map(trip => (Object.assign(Object.assign({}, trip), { distance: (0, haversine_distance_1.default)(userCoords, trip.creatorLocation.coordinates) })))
-                    .sort((a, b) => a.distance - b.distance);
-                res.status(200).json(sortedTrips);
+                res.status(200).json(trips);
                 return;
             }
             catch (error) {

@@ -718,7 +718,7 @@ class UserController {
         try {
             const userId = (req as any).user.id;
             if (!userId) {
-                res.status(400).json({ error: 'Invalid userid' });
+                res.status(400).json({ error: 'Invalid user ID' });
                 return;
             }
 
@@ -731,38 +731,49 @@ class UserController {
             const { filteredTrip = {} } = req.body;
             const { loc, date, age, gender, tripVibes } = filteredTrip;
 
-            const userCoords = user.location.coordinates;
             const maxDistanceInMeters = 1000000;
+            const userCoords = user.location.coordinates;
             const earthRadiusInMeters = 6378100;
             const radiusInRadians = maxDistanceInMeters / earthRadiusInMeters;
 
-            // Build filters
-            const orFilter: any[] = [];
+            // Build $or filters
+            const orFilters: any[] = [];
 
-            if (gender) orFilter.push({ "creator.gender": gender });
+            if (gender) {
+                orFilters.push({ "creator.gender": gender });
+            }
+
             if (age?.min !== undefined && age?.max !== undefined) {
-                orFilter.push({ "creator.age": { $gte: age.min, $lte: age.max } });
+                orFilters.push({ "creator.age": { $gte: age.min, $lte: age.max } });
             }
+
             if (tripVibes?.length) {
-                orFilter.push({ "tripVibe.name": { $in: tripVibes } });
+                orFilters.push({ "tripVibe.name": { $in: tripVibes } });
             }
 
-            const baseMatch = orFilter.length ? { $or: orFilter } : {};
+            if (date) {
+                orFilters.push({ startDate: { $gte: new Date(date) } });
+            }
 
-            // Match logic based on whether user gave destination
-            const geoMatch = loc
-                ? { ...baseMatch, destination: loc }
-                : {
-                    ...baseMatch,
+            if (loc) {
+                orFilters.push({ destination: loc }); // exact destination match
+            }
+
+            const finalMatch = orFilters.length ? { $or: orFilters } : {};
+
+            const geoMatch = !loc
+                ? {
+                    ...finalMatch,
                     creatorLocation: {
                         $geoWithin: {
                             $centerSphere: [userCoords, radiusInRadians],
                         },
                     },
-                };
+                }
+                : finalMatch;
 
+            // Aggregation pipeline
             const aggregationStages = (matchStage: any) => [
-                { $match: matchStage },
                 {
                     $lookup: {
                         from: "userData",
@@ -772,6 +783,7 @@ class UserController {
                     },
                 },
                 { $unwind: "$creator" },
+                { $match: matchStage },
                 {
                     $project: {
                         _id: 1,
@@ -781,6 +793,7 @@ class UserController {
                         travellingFrom: 1,
                         description: 1,
                         tripVibe: 1,
+                        creatorLocation: 1,
                         "creator._id": 1,
                         "creator.name": 1,
                         "creator.profilePic": 1,
@@ -788,52 +801,34 @@ class UserController {
                         "creator.age": 1,
                         "creator.aboutMe.personality": 1,
                         "creator.location": 1,
-                        creatorLocation: 1
                     },
                 },
             ];
 
-            // === First Search ===
             let trips = await Trip.aggregate(aggregationStages(geoMatch));
-            console.log("Nearby trips count:", trips.length);
+            console.log("Trips found (OR logic):", trips.length);
 
-            // Apply date filter (if any)
-            if (date) {
-                const dateMatch = { startDate: { $gte: new Date(date) } };
-                trips = await Trip.aggregate(
-                    aggregationStages({ ...geoMatch, ...dateMatch })
-                );
-                if (trips.length > 0) {
-                    res.status(200).json(trips);
-                    return;
-                }
+            // If still empty, fallback to all public trips sorted by distance
+            if (trips.length === 0) {
+                const allTrips = await Trip.aggregate(aggregationStages({}));
+                trips = allTrips
+                    .filter(trip => trip.creator?.location?.coordinates)
+                    .map(trip => ({
+                        ...trip,
+                        distance: haversine(userCoords, trip.creator.location.coordinates),
+                    }))
+                    .sort((a, b) => a.distance - b.distance);
             }
 
-            // Return if found
-            if (trips.length > 0) {
-                res.status(200).json(trips);
-                return;
-            }
-
-            // === Fallback: show all matching trips, sorted by distance ===
-            const allTrips = await Trip.aggregate(aggregationStages(baseMatch));
-            const sortedTrips = allTrips
-                .filter(trip => trip.creatorLocation?.coordinates)
-                .map(trip => ({
-                    ...trip,
-                    distance: haversine(userCoords, trip.creatorLocation.coordinates),
-                }))
-                .sort((a, b) => a.distance - b.distance);
-
-             res.status(200).json(sortedTrips);
-             return;
-
+            res.status(200).json(trips);
+            return;
         } catch (error) {
             console.error("Homepage error:", error);
             res.status(500).json({ error: 'Internal server error' });
             return;
         }
     }
+
 
 
 
