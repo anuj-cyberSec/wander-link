@@ -20,7 +20,7 @@
     <ul id="messages"></ul>
   </div>
   <script>
-    const socket = io("ws://localhost:5000");
+    const socket = io("wss://localhost:5000");
 
     socket.on("connect", () => {
       console.log("Connected:", socket.id);
