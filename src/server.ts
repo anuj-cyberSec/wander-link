@@ -1,3 +1,4 @@
+import http from 'http';
 import {Request, Response} from 'express';
 import cors from 'cors';
 import express from 'express';
@@ -7,6 +8,12 @@ import authRouter from './routes/auth.route';
 
 const app = express();
 const port = 5000;
+
+import {server as initSocket} from './websocket';
+const server = http.createServer(app);
+initSocket(server);
+
+
 app.use(cors());
 app.use(express.json());
 // allow 5mb file uploads
@@ -19,6 +26,6 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/backend/users', userRouter);
 app.use('/backend/auth', authRouter);
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server started at http://localhost:${port}`);
 });

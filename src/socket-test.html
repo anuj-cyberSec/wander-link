@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Socket.IO Test Client</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+  <h2>Socket.IO Chat Test</h2>
+  <div>
+    <label>Room ID: <input id="roomId" value="room1"></label>
+    <button onclick="joinRoom()">Join Room</button>
+  </div>
+  <div>
+    <label>Message: <input id="message"></label>
+    <button onclick="sendMessage()">Send Message</button>
+  </div>
+  <div>
+    <h3>Messages:</h3>
+    <ul id="messages"></ul>
+  </div>
+  <script>
+    const socket = io("ws://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("Connected:", socket.id);
+    });
+
+    function joinRoom() {
+      const roomId = document.getElementById("roomId").value;
+      socket.emit("join-room", roomId);
+      logMessage(`Joined room: ${roomId}`);
+    }
+
+    function sendMessage() {
+      const roomId = document.getElementById("roomId").value;
+      const message = document.getElementById("message").value;
+      socket.emit("send-message", { roomId, message });
+      logMessage(`You: ${message}`);
+    }
+
+    socket.on("receive-message", (data) => {
+      logMessage(`From ${data.sender}: ${data.message}`);
+    });
+
+    function logMessage(msg) {
+      const li = document.createElement("li");
+      li.textContent = msg;
+      document.getElementById("messages").appendChild(li);
+    }
+  </script>
+</body>
+</html>
