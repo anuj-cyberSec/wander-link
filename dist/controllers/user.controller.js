@@ -735,6 +735,8 @@ class UserController {
                     res.status(400).json({ error: 'User location not found' });
                     return;
                 }
+                // get all trips IDs user has swiped
+                const swipedTrips = yield swipe_model_1.default.find({ swiper: userId }).distinct("target");
                 const { filteredTrip = {} } = req.body;
                 const { loc, date, age, gender, tripVibes } = filteredTrip;
                 const maxDistanceInMeters = 1000000;
@@ -758,14 +760,18 @@ class UserController {
                     orFilters.push({ destination: loc });
                 }
                 const isFilterApplied = orFilters.length > 0;
+                const excludeSwiped = { _id: { $nin: swipedTrips } };
                 const matchStage = isFilterApplied
-                    ? { $or: orFilters }
+                    ? { $and: [{ $or: orFilters }, excludeSwiped] }
                     : {
-                        creatorLocation: {
-                            $geoWithin: {
-                                $centerSphere: [userCoords, radiusInRadians],
+                        $and: [{
+                                creatorLocation: {
+                                    $geoWithin: {
+                                        $centerSphere: [userCoords, radiusInRadians],
+                                    },
+                                },
                             },
-                        },
+                            excludeSwiped]
                     };
                 const aggregationStages = (matchStage) => [
                     {

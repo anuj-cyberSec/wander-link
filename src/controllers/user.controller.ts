@@ -845,6 +845,9 @@ class UserController {
                 return;
             }
 
+            // get all trips IDs user has swiped
+            const swipedTrips = await Swipe.find({ swiper: userId }).distinct("target");
+
             const { filteredTrip = {} } = req.body;
             const { loc, date, age, gender, tripVibes } = filteredTrip;
 
@@ -877,14 +880,18 @@ class UserController {
 
             const isFilterApplied = orFilters.length > 0;
 
+            const excludeSwiped = { _id: { $nin: swipedTrips } }
             const matchStage = isFilterApplied
-                ? { $or: orFilters }
+                ? { $and: [{ $or: orFilters }, excludeSwiped] }
                 : {
-                    creatorLocation: {
-                        $geoWithin: {
-                            $centerSphere: [userCoords, radiusInRadians],
+                    $and: [{
+                        creatorLocation: {
+                            $geoWithin: {
+                                $centerSphere: [userCoords, radiusInRadians],
+                            },
                         },
                     },
+                        excludeSwiped]
                 };
 
             const aggregationStages = (matchStage: any) => [

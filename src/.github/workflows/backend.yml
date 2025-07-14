@@ -1,29 +1,33 @@
-name: Backend CI only
+name : Continous Deployment pipeline
+
+# ssh into vm and then uploading the code and then restarting the vm
 
 on:
   push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
+    - main
 
 jobs:
-  backend-ci-pipeline:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: setup node js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '18'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Lint
-        run: npm run lint
-
-      - name: Run tests
-        run: npm test
+      
+      - name: ssh connection with the vm
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd /home/azureuser/wanderconnect/backend
+            git pull origin main
+            npm install
+            pm2 restart 0
