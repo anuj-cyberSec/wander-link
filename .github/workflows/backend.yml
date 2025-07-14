@@ -29,6 +29,10 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            source ~/.nvm/nvm.sh
+            echo "NVM version: $(nvm --version)"
+            echo "npm version: $(npm -v)"
+            echo "pm2 version: $(pm2 -v)"
             cd /home/azureuser/wanderconnect/backend
             git pull origin main
             npm install
