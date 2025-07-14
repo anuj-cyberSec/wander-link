@@ -20,7 +20,8 @@ jobs:
         with:
           node-version: '18'
 
-      
+      - name: debugging value of ssh params
+        run: echo "vm host is ${{ secrets.VM_HOST }} and vm user is ${{ secrets.VM_USER }}"
       - name: ssh connection with the vm
         uses: appleboy/ssh-action@v0.1.10
         with:
