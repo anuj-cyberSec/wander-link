@@ -982,6 +982,7 @@ class UserController {
         }
         catch (error) {
             res.status(500).json({'message': 'Error occurred while creating trip'});
+            console.log("error is", error)
             return;
         }
     }
