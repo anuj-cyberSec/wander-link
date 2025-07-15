@@ -106,7 +106,7 @@ const TripSchema: Schema<ITrip> = new Schema(
         ],
         status: { type: String, enum: ["Open", "Closed"], default: "Open" },
         budget: { type: String, enum: ["Low", "Medium", "High"], required: true },
-        tripType: { type: String, enum: ["Backpacking", "Luxury", "Solo", "Group"], required: true },
+        tripType: { type: String, enum: ["Camping", "Hiking", "Road Trips", "Adventure","Backpacking","Group Travel","Beach Vacation","Spiritual Trips", "Workation", "Luxury Stay"], required: true },
         visibility: { type: String, enum: ["Public", "Private"], required: true },
         maxParticipants: { type: Number, min: 1, default: 10 },  // Default max participants to 10
         tripVibe: [{
