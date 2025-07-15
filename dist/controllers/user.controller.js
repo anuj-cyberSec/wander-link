@@ -850,11 +850,11 @@ class UserController {
                 });
                 console.log("new trip is ", newTrip);
                 yield newTrip.save();
-                res.send('Trip created successfully');
+                res.status(201).json({ 'message': 'Trip created successfully' });
                 return;
             }
             catch (error) {
-                res.send('Error');
+                res.status(500).json({ 'message': 'Error occurred while creating trip' });
                 return;
             }
         });
