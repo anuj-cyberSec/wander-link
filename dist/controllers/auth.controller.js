@@ -44,6 +44,32 @@ const verifyGoogleToken = (token) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 class AuthController {
+    static validityCheck(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const token = req.header('x-auth-token');
+                if (!token) {
+                    res.status(401).send('Access Denied');
+                    return;
+                }
+                // decode
+                const decoded = jsonwebtoken_1.default.verify(token, secret);
+                // if validity expired return false else true
+                // console.log("decoded is ", decoded);
+                if (decoded) {
+                    res.send({ valid: true });
+                    return;
+                }
+                res.send({ valid: false });
+                return;
+            }
+            catch (error) {
+                console.log(error);
+                res.status(500).send('Error');
+                return;
+            }
+        });
+    }
     static register(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

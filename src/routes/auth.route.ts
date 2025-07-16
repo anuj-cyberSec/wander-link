@@ -2,7 +2,7 @@ import express from 'express';
 import AuthController from '../controllers/auth.controller';
 
 const router = express.Router();
-
+router.get('/validity', AuthController.validityCheck);
 router.post('/register', AuthController.register);
 router.post('/sendOTP', AuthController.sendOTP);
 router.post('/verifyOTP', AuthController.verifyOTP);

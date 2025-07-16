@@ -41,6 +41,30 @@ const verifyGoogleToken = async (token: string) => {
 
 
 class AuthController {
+    static async validityCheck(req: Request, res: Response) {
+        try {
+            const token = req.header('x-auth-token');
+            if (!token) {
+                res.status(401).send('Access Denied');
+                return;
+            }
+            // decode
+            const decoded = jwt.verify(token, secret);
+            // if validity expired return false else true
+            // console.log("decoded is ", decoded);
+            if (decoded) {
+                res.send({ valid: true });
+                return;
+            }
+            res.send({ valid: false });
+            return;
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).send('Error');
+            return;
+        }
+    }
     static async register(req: Request, res: Response) {
         try {
             const { email, name, photo } = req.body;
@@ -178,7 +202,7 @@ class AuthController {
                 user.verified = true;
                 await user.save();
                 const token = jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn: '10d' });
-                res.send({token});
+                res.send({ token });
                 return;
             }
 
