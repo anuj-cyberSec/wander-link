@@ -1474,9 +1474,10 @@ class UserController {
                 res.status(400).json({ message: 'Invalid tripObjectId or approval' });
                 return;
             }
-
+            console.log("trip object id is , approval is ", tripObjectId, approval);
             // update swipe collection with accepted true and fetch swiper id and then update trip collection with participants
             const swipe = await Swipe.findByIdAndUpdate(tripObjectId, { accepted: approval }, { new: true });
+            console.log("swipe is ", swipe);
             if (!swipe) {
                 res.status(400).json({ message: 'Swipe not found' });
                 return;
@@ -1486,10 +1487,13 @@ class UserController {
 
             // also if approval is true then create a chat between swiper and trip creator but only if chat does not already exist
             if (approval) {
+                console.log("it is true")
                 const existingChat = await Chat.findOne({
                     participants: { $all: [userId, swiperId] }
                 });
+                console.log("existing chat is ", existingChat)
                 if (!existingChat) {
+                    console.log("creating new chat");
                     const newChat = new Chat({
                         participants: [userId, swiperId],
                         trip: tripId,
@@ -1498,8 +1502,8 @@ class UserController {
                     await newChat.save();
                 }
             }
-            
 
+            console.log("trip is approved with chat");
             // update trip collection with participants
             const trip = await Trip.findByIdAndUpdate(tripId, { $addToSet: { participants: swiperId } }, { new: true });
             if (!trip) {
@@ -1524,12 +1528,15 @@ class UserController {
                 return;
             }
 
-            // Fetch all chats where the user is a participant need to give names of both participants
+            // Fetch all chats where the user is a participant need to give names of both participants from User collection also return the roomid
+
             const chats = await Chat.find({ participants: userId })
                 .populate({
                     path: 'participants',
                     select: 'name'
                 });
+
+            console.log("chats are ", chats);
             res.status(200).json({ message: chats });
             return;
         }

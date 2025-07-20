@@ -1,5 +1,5 @@
 import mongoose, {Schema, Document} from "mongoose";
-
+import { randomUUID } from "crypto";
 interface IChat extends Document {
     roomId: string;
     participants: Schema.Types.ObjectId[];  // Array of User IDs
@@ -12,7 +12,7 @@ interface IChat extends Document {
 }
 
 const chatSchema = new Schema<IChat>({
-    roomId: { type: String, required: true },
+    roomId: { type: String, required: true, default: randomUUID },
     participants: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
     messages: [{
         sender: { type: Schema.Types.ObjectId, ref: "User", required: true },

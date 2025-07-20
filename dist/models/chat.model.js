@@ -34,8 +34,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const crypto_1 = require("crypto");
 const chatSchema = new mongoose_1.Schema({
-    roomId: { type: String, required: true },
+    roomId: { type: String, required: true, default: crypto_1.randomUUID },
     participants: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true }],
     messages: [{
             sender: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },

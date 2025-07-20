@@ -16,6 +16,7 @@ exports.chatHandler = void 0;
 const chat_model_1 = __importDefault(require("../../models/chat.model"));
 const chatHandler = (socket, io) => {
     socket.on('join-room', (roomId) => {
+        console.log("joining room ", roomId);
         socket.join(roomId);
     });
     // socket.on('send-message', ({roomId, message}: {roomId: string; message: string}) => {
@@ -23,8 +24,16 @@ const chatHandler = (socket, io) => {
     // });
     socket.on('send-message', (_a) => __awaiter(void 0, [_a], void 0, function* ({ roomId, message }) {
         // also save the message to the database
-        yield chat_model_1.default.findOneAndUpdate({ roomId }, { $push: { messages: { sender: socket.id, content: message, timestamp: new Date() } } });
-        socket.to(roomId).emit('receive-message', { message, sender: socket.id });
+        console.log("roomid , message are ", roomId, message);
+        if (!roomId || !message) {
+            console.log("roomId, message or senderId is missing");
+            return;
+        }
+        const senderId = socket.user.id;
+        console.log("senderId is ", senderId);
+        const result = yield chat_model_1.default.findOneAndUpdate({ roomId }, { $push: { messages: { sender: senderId, content: message, timestamp: new Date() } } });
+        console.log("result is ", result);
+        socket.to(roomId).emit('receive-message', { message, sender: senderId });
     }));
 };
 exports.chatHandler = chatHandler;
