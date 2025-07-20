@@ -23,4 +23,5 @@ router.post('/fetch-trip', authenticator_1.default, user_controller_1.default.fe
 router.get('/get-approved-trips', authenticator_1.default, user_controller_1.default.fetchApprovedTrip);
 router.get('/wanderer-approval', authenticator_1.default, user_controller_1.default.fetchTripForApproval);
 router.post('/approve-trip', authenticator_1.default, user_controller_1.default.approveTrip);
+router.get('/chat-page', authenticator_1.default, user_controller_1.default.fetchChatPage);
 exports.default = router;

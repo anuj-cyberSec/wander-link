@@ -18,6 +18,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const trip_model_1 = __importDefault(require("../models/trip.model"));
 const swipe_model_1 = __importDefault(require("../models/swipe.model"));
+const chat_model_1 = __importDefault(require("../models/chat.model"));
 const delete_1 = __importDefault(require("../utils/delete"));
 const busboy_1 = __importDefault(require("busboy"));
 const path_1 = __importDefault(require("path"));
@@ -1304,6 +1305,20 @@ class UserController {
                 }
                 const tripId = swipe.target;
                 const swiperId = swipe.swiper;
+                // also if approval is true then create a chat between swiper and trip creator but only if chat does not already exist
+                if (approval) {
+                    const existingChat = yield chat_model_1.default.findOne({
+                        participants: { $all: [userId, swiperId] }
+                    });
+                    if (!existingChat) {
+                        const newChat = new chat_model_1.default({
+                            participants: [userId, swiperId],
+                            trip: tripId,
+                            messages: []
+                        });
+                        yield newChat.save();
+                    }
+                }
                 // update trip collection with participants
                 const trip = yield trip_model_1.default.findByIdAndUpdate(tripId, { $addToSet: { participants: swiperId } }, { new: true });
                 if (!trip) {
@@ -1315,6 +1330,30 @@ class UserController {
             }
             catch (error) {
                 console.error("Error in approveTrip:", error);
+                res.status(500).json({ message: 'Internal Server Error' });
+                return;
+            }
+        });
+    }
+    static fetchChatPage(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.user.id;
+                if (!userId) {
+                    res.status(400).json({ message: 'Invalid userId' });
+                    return;
+                }
+                // Fetch all chats where the user is a participant need to give names of both participants
+                const chats = yield chat_model_1.default.find({ participants: userId })
+                    .populate({
+                    path: 'participants',
+                    select: 'name'
+                });
+                res.status(200).json({ message: chats });
+                return;
+            }
+            catch (error) {
+                console.error("Error in fetchChatPage:", error);
                 res.status(500).json({ message: 'Internal Server Error' });
                 return;
             }

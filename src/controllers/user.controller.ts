@@ -8,7 +8,7 @@ import User from '../models/user.model';
 import Trip from '../models/trip.model';
 import Swipe from '../models/swipe.model';
 import { ISwipe } from '../models/swipe.model'
-
+import Chat from '../models/chat.model';
 import deleteOldProfilePic from '../utils/delete';
 import busboy from 'busboy';
 import path from 'path';
@@ -1484,6 +1484,22 @@ class UserController {
             const tripId = swipe.target;
             const swiperId = swipe.swiper;
 
+            // also if approval is true then create a chat between swiper and trip creator but only if chat does not already exist
+            if (approval) {
+                const existingChat = await Chat.findOne({
+                    participants: { $all: [userId, swiperId] }
+                });
+                if (!existingChat) {
+                    const newChat = new Chat({
+                        participants: [userId, swiperId],
+                        trip: tripId,
+                        messages: []
+                    });
+                    await newChat.save();
+                }
+            }
+            
+
             // update trip collection with participants
             const trip = await Trip.findByIdAndUpdate(tripId, { $addToSet: { participants: swiperId } }, { new: true });
             if (!trip) {
@@ -1495,6 +1511,30 @@ class UserController {
         }
         catch (error) {
             console.error("Error in approveTrip:", error);
+            res.status(500).json({ message: 'Internal Server Error' });
+            return;
+        }
+    }
+
+    static async fetchChatPage(req: Request, res: Response) {
+        try{
+            const userId = (req as any).user.id;
+            if (!userId) {
+                res.status(400).json({ message: 'Invalid userId' });
+                return;
+            }
+
+            // Fetch all chats where the user is a participant need to give names of both participants
+            const chats = await Chat.find({ participants: userId })
+                .populate({
+                    path: 'participants',
+                    select: 'name'
+                });
+            res.status(200).json({ message: chats });
+            return;
+        }
+        catch (error) {
+            console.error("Error in fetchChatPage:", error);
             res.status(500).json({ message: 'Internal Server Error' });
             return;
         }

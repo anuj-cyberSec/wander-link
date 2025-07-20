@@ -22,4 +22,5 @@ router.post('/fetch-trip', authentication, UserController.fetchTrip)
 router.get('/get-approved-trips', authentication, UserController.fetchApprovedTrip);
 router.get('/wanderer-approval', authentication, UserController.fetchTripForApproval);
 router.post('/approve-trip', authentication, UserController.approveTrip);
+router.get('/chat-page', authentication, UserController.fetchChatPage)
 export default router;
