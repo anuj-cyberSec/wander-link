@@ -1356,7 +1356,7 @@ class UserController {
                     select: 'name'
                 });
                 console.log("chats are ", chats);
-                res.status(200).json({ message: chats });
+                res.status(200).json({ message: chats, userId: userId });
                 return;
             }
             catch (error) {
