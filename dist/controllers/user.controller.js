@@ -851,6 +851,12 @@ class UserController {
                 });
                 console.log("new trip is ", newTrip);
                 yield newTrip.save();
+                // and save the trip id in the user's tripIds array
+                if (!user.tripIds) {
+                    user.tripIds = [];
+                }
+                user.tripIds.push(newTrip._id);
+                yield user.save();
                 res.status(201).json({ 'message': 'Trip created successfully' });
                 return;
             }
@@ -960,7 +966,16 @@ class UserController {
                 }
                 const sanitizedUser = user.toObject();
                 delete sanitizedUser.password;
-                res.status(200).json({ message: sanitizedUser });
+                // also fetch all the trips created by the user
+                const trips = yield trip_model_1.default.find({ creator: userId }).select({
+                    destination: 1,
+                    travellingFrom: 1,
+                    startDate: 1,
+                    endDate: 1,
+                    description: 1,
+                    // tripVibe: 1,
+                });
+                res.status(200).json({ message: sanitizedUser, trips: trips });
                 return;
             }
             catch (error) {
