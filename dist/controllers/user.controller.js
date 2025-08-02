@@ -19,7 +19,6 @@ const user_model_1 = __importDefault(require("../models/user.model"));
 const trip_model_1 = __importDefault(require("../models/trip.model"));
 const swipe_model_1 = __importDefault(require("../models/swipe.model"));
 const chat_model_1 = __importDefault(require("../models/chat.model"));
-const delete_1 = __importDefault(require("../utils/delete"));
 const busboy_1 = __importDefault(require("busboy"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
@@ -147,10 +146,36 @@ class UserController {
                     const filename = filesplit[filesplit.length - 1];
                     console.log("filename is ", filename);
                     console.log(`complete name is profile-pic-storage/${filename}`);
+                    // if (user.profilePic && user.profilePic.length > 0) {
+                    //     console.log("user profilePic is ", user.profilePic);
+                    //     const resultDeletion = await deleteOldProfilePic(`profile-pic-storage/${filename}`);
+                    //     console.log("result of deletion is ", resultDeletion);
+                    // }
                     if (user.profilePic && user.profilePic.length > 0) {
-                        console.log("user profilePic is ", user.profilePic);
-                        const resultDeletion = yield (0, delete_1.default)(`profile-pic-storage/${filename}`);
-                        console.log("result of deletion is ", resultDeletion);
+                        const oldUrl = user.profilePic[0];
+                        const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
+                        const oldBlobPath = oldUrl.startsWith(urlPrefix)
+                            ? oldUrl.slice(urlPrefix.length)
+                            : ""; // fallback
+                        if (!oldBlobPath) {
+                            console.error("Invalid old profilePic URL format");
+                        }
+                        else {
+                            console.log("Deleting old profile picture:", oldBlobPath);
+                            const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
+                            try {
+                                const deleteResponse = yield oldBlobClient.deleteIfExists();
+                                if (deleteResponse.succeeded) {
+                                    console.log("Old profile picture deleted successfully");
+                                }
+                                else {
+                                    console.log("Old picture not found or already deleted");
+                                }
+                            }
+                            catch (err) {
+                                console.error("Error deleting old profile picture:", err);
+                            }
+                        }
                     }
                     // Delete the old profile picture if it exists
                     // Delete the old profile pic if it exists
@@ -179,6 +204,7 @@ class UserController {
                     // }
                     // Update user record
                     user.profilePic = [fileUrl];
+                    console.log("user profile pic is", user.profilePic);
                     yield user.save();
                     // Cleanup temp file
                     fs_1.default.unlink(imageToUpload.filePath, (err) => {

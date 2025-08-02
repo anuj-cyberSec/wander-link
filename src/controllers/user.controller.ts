@@ -158,11 +158,38 @@ class UserController {
                 const filename = filesplit[filesplit.length - 1];
                 console.log("filename is ", filename);
                 console.log(`complete name is profile-pic-storage/${filename}`);
+                // if (user.profilePic && user.profilePic.length > 0) {
+                //     console.log("user profilePic is ", user.profilePic);
+                //     const resultDeletion = await deleteOldProfilePic(`profile-pic-storage/${filename}`);
+                //     console.log("result of deletion is ", resultDeletion);
+                // }
+
+
                 if (user.profilePic && user.profilePic.length > 0) {
-                    console.log("user profilePic is ", user.profilePic);
-                    const resultDeletion = await deleteOldProfilePic(`profile-pic-storage/${filename}`);
-                    console.log("result of deletion is ", resultDeletion);
+                    const oldUrl = user.profilePic[0];
+                    const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
+                    const oldBlobPath = oldUrl.startsWith(urlPrefix)
+                        ? oldUrl.slice(urlPrefix.length)
+                        : ""; // fallback
+
+                    if (!oldBlobPath) {
+                        console.error("Invalid old profilePic URL format");
+                    } else {
+                        console.log("Deleting old profile picture:", oldBlobPath);
+                        const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
+                        try {
+                            const deleteResponse = await oldBlobClient.deleteIfExists();
+                            if (deleteResponse.succeeded) {
+                                console.log("Old profile picture deleted successfully");
+                            } else {
+                                console.log("Old picture not found or already deleted");
+                            }
+                        } catch (err) {
+                            console.error("Error deleting old profile picture:", err);
+                        }
+                    }
                 }
+
                 // Delete the old profile picture if it exists
                 // Delete the old profile pic if it exists
                 // if (user.profilePic && user.profilePic.length > 0) {
@@ -193,6 +220,7 @@ class UserController {
 
                 // Update user record
                 user.profilePic = [fileUrl];
+                console.log("user profile pic is", user.profilePic)
                 await user.save();
 
                 // Cleanup temp file
@@ -978,16 +1006,16 @@ class UserController {
             console.log("new trip is ", newTrip);
             await newTrip.save();
             // and save the trip id in the user's tripIds array
-            if(!user.tripIds){
+            if (!user.tripIds) {
                 user.tripIds = [];
             }
             user.tripIds.push(newTrip._id as any);
             await user.save();
-            res.status(201).json({'message': 'Trip created successfully'});
+            res.status(201).json({ 'message': 'Trip created successfully' });
             return;
         }
         catch (error) {
-            res.status(500).json({'message': 'Error occurred while creating trip'});
+            res.status(500).json({ 'message': 'Error occurred while creating trip' });
             console.log("error is", error)
             return;
         }
@@ -1536,7 +1564,7 @@ class UserController {
     }
 
     static async fetchChatPage(req: Request, res: Response) {
-        try{
+        try {
             const userId = (req as any).user.id;
             if (!userId) {
                 res.status(400).json({ message: 'Invalid userId' });
