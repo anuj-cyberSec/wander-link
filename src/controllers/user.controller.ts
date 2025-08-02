@@ -98,154 +98,176 @@ class UserController {
         }
     }
 
-    static async uploadProfilePicture(req: Request, res: Response) {
-        try {
-            const userId = (req as any).user?.id;
-            if (!userId) {
-                res.status(400).json({ message: "Invalid userId" });
-                return;
+    // static async uploadProfilePicture(req: Request, res: Response) {
+    //     try {
+    //         const userId = (req as any).user?.id;
+    //         if (!userId) {
+    //             res.status(400).json({ message: "Invalid userId" });
+    //             return;
 
-            }
-
-
-            const user = await User.findById(userId);
-            if (!user) {
-                res.status(404).json({ message: "User not found" });
-                return;
-
-            }
-
-            const bb = busboy({ headers: req.headers });
-            let imageFileName = "";
-            let imageToUpload: { filePath?: string; mimetype?: string } = {};
-
-            bb.on("file", (_fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, fileMimeType: string) => {
-                const safeFilename = typeof filename === "string" ? filename : filename?.filename;
-                const extension = path.extname(safeFilename);
-                if (extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png" && extension !== ".heic") {
-                    res.status(400).json({ message: "Invalid file type. Only .jpg, .jpeg, .png, and .heic are allowed." });
-                    return;
-                }
-                const uniqueFileName = `${Date.now() / 1000}${extension}`;
-                imageFileName = uniqueFileName;
-
-                const filePath = path.join(__dirname, "..", "TempUploads", uniqueFileName);
-                imageToUpload = { filePath, mimetype: fileMimeType };
-                file.pipe(fs.createWriteStream(filePath));
-            });
-
-            bb.on("finish", async () => {
-                if (!imageFileName || !imageToUpload.filePath) {
-                    res.status(400).json({ message: "No file uploaded" });
-                    return;
-                }
-
-                const blobServiceClient = BlobServiceClient.fromConnectionString(CONTAINER_CONNECTION_STRING);
-                const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
-                const blobName = `${DIRECTORY}/${imageFileName}`;
-                const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-                await blockBlobClient.uploadFile(imageToUpload.filePath, {
-                    blobHTTPHeaders: {
-                        blobContentType: imageToUpload.mimetype || "application/octet-stream"
-                    }
-                });
-
-                const fileUrl = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/${blobName}`;
-                console.log("File uploaded successfully:", fileUrl);
-
-                const filesplit = fileUrl.split('/');
-                const filename = filesplit[filesplit.length - 1];
-                console.log("filename is ", filename);
-                console.log(`complete name is profile-pic-storage/${filename}`);
-                // if (user.profilePic && user.profilePic.length > 0) {
-                //     console.log("user profilePic is ", user.profilePic);
-                //     const resultDeletion = await deleteOldProfilePic(`profile-pic-storage/${filename}`);
-                //     console.log("result of deletion is ", resultDeletion);
-                // }
+    //         }
 
 
-                if (user.profilePic && user.profilePic.length > 0) {
-                    const oldUrl = user.profilePic[0];
-                    const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
-                    const oldBlobPath = oldUrl.startsWith(urlPrefix)
-                        ? oldUrl.slice(urlPrefix.length)
-                        : ""; // fallback
+    //         const user = await User.findById(userId);
+    //         if (!user) {
+    //             res.status(404).json({ message: "User not found" });
+    //             return;
 
-                    if (!oldBlobPath) {
-                        console.error("Invalid old profilePic URL format");
-                    } else {
-                        console.log("Deleting old profile picture:", oldBlobPath);
-                        const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
-                        try {
-                            const deleteResponse = await oldBlobClient.deleteIfExists();
-                            if (deleteResponse.succeeded) {
-                                console.log("Old profile picture deleted successfully");
-                            } else {
-                                console.log("Old picture not found or already deleted");
-                            }
-                        } catch (err) {
-                            console.error("Error deleting old profile picture:", err);
-                        }
-                    }
-                }
+    //         }
 
-                // Delete the old profile picture if it exists
-                // Delete the old profile pic if it exists
-                // if (user.profilePic && user.profilePic.length > 0) {
-                //     const oldUrl = user.profilePic[0];
-                //     // Extract the path after the container name
-                //     const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
-                //     const oldBlobPath = oldUrl.startsWith(urlPrefix)
-                //         ? oldUrl.slice(urlPrefix.length)
-                //         : ""; // fallback if URL is somehow wrong
+    //         const bb = busboy({ headers: req.headers });
+    //         let imageFileName = "";
+    //         let imageToUpload: { filePath?: string; mimetype?: string } = {};
 
-                //     if (!oldBlobPath) {
-                //         console.error("Invalid old profilePic URL format");
-                //     } else {
-                //         const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
-                //         try {
-                //             const deleteResponse = await oldBlobClient.deleteIfExists();
-                //             if (deleteResponse.succeeded) {
-                //                 console.log("Old profile picture deleted successfully");
-                //             } else {
-                //                 console.log("Old picture not found or already deleted");
-                //             }
-                //         } catch (err) {
-                //             console.error("Error deleting old profile picture:", err);
-                //         }
-                //     }
-                // }
+    //         bb.on("file", (_fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, encoding: string, fileMimeType: string) => {
+    //             const safeFilename = typeof filename === "string" ? filename : filename?.filename;
+    //             const extension = path.extname(safeFilename);
+    //             if (extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png" && extension !== ".heic") {
+    //                 res.status(400).json({ message: "Invalid file type. Only .jpg, .jpeg, .png, and .heic are allowed." });
+    //                 return;
+    //             }
+    //             const uniqueFileName = `${Date.now() / 1000}${extension}`;
+    //             imageFileName = uniqueFileName;
+
+    //             const filePath = path.join(__dirname, "..", "TempUploads", uniqueFileName);
+    //             imageToUpload = { filePath, mimetype: fileMimeType };
+    //             file.pipe(fs.createWriteStream(filePath));
+    //         });
+
+    //         bb.on("finish", async () => {
+    //             if (!imageFileName || !imageToUpload.filePath) {
+    //                 res.status(400).json({ message: "No file uploaded" });
+    //                 return;
+    //             }
+
+    //             const blobServiceClient = BlobServiceClient.fromConnectionString(CONTAINER_CONNECTION_STRING);
+    //             const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+    //             const blobName = `${DIRECTORY}/${imageFileName}`;
+    //             const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+    //             await blockBlobClient.uploadFile(imageToUpload.filePath, {
+    //                 blobHTTPHeaders: {
+    //                     blobContentType: imageToUpload.mimetype || "application/octet-stream"
+    //                 }
+    //             });
+
+    //             const fileUrl = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/${blobName}`;
+    //             console.log("File uploaded successfully:", fileUrl);
+
+    //             const filesplit = fileUrl.split('/');
+    //             const filename = filesplit[filesplit.length - 1];
+    //             console.log("filename is ", filename);
+    //             console.log(`complete name is profile-pic-storage/${filename}`);
+    //             // if (user.profilePic && user.profilePic.length > 0) {
+    //             //     console.log("user profilePic is ", user.profilePic);
+    //             //     const resultDeletion = await deleteOldProfilePic(`profile-pic-storage/${filename}`);
+    //             //     console.log("result of deletion is ", resultDeletion);
+    //             // }
 
 
-                // Update user record
-                user.profilePic = [fileUrl];
-                console.log("user profile pic is", user.profilePic)
-                await user.save();
+    //             // if (user.profilePic && user.profilePic.length > 0) {
+    //             //     const oldUrl = user.profilePic[0];
+    //             //     const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
+    //             //     const oldBlobPath = oldUrl.startsWith(urlPrefix)
+    //             //         ? oldUrl.slice(urlPrefix.length)
+    //             //         : ""; // fallback
 
-                // Cleanup temp file
-                fs.unlink(imageToUpload.filePath, (err) => {
-                    if (err) console.error("Error deleting local file:", err);
-                    else console.log("Local temp file deleted");
-                });
+    //             //     if (!oldBlobPath) {
+    //             //         console.error("Invalid old profilePic URL format");
+    //             //     } else {
+    //             //         console.log("Deleting old profile picture:", oldBlobPath);
+    //             //         const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
+    //             //         try {
+    //             //             const deleteResponse = await oldBlobClient.deleteIfExists();
+    //             //             if (deleteResponse.succeeded) {
+    //             //                 console.log("Old profile picture deleted successfully");
+    //             //             } else {
+    //             //                 console.log("Old picture not found or already deleted");
+    //             //             }
+    //             //         } catch (err) {
+    //             //             console.error("Error deleting old profile picture:", err);
+    //             //         }
+    //             //     }
+    //             // }
+    //             if (user.profilePic && user.profilePic.length > 0) {
+    //                 try {
+    //                     const oldUrl = user.profilePic[0];
+    //                     const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
+    //                     if (!oldUrl.startsWith(urlPrefix)) {
+    //                         console.warn("Old profilePic URL does not match expected prefix, skipping delete");
+    //                     } else {
+    //                         const oldBlobPath = oldUrl.substring(urlPrefix.length);
+    //                         const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
+    //                         console.log("Attempting to delete old blob:", oldBlobPath);
+    //                         const deleteResult = await oldBlobClient.deleteIfExists();
+    //                         if (deleteResult.succeeded) {
+    //                             console.log("Old profile picture deleted successfully");
+    //                         } else {
+    //                             console.log("Old picture not found or already deleted");
+    //                         }
+    //                     }
+    //                 } catch (err) {
+    //                     console.error("Error during old image deletion:", err);
+    //                 }
+    //             }
 
-                res.status(200).json({
-                    message: "File uploaded successfully",
-                    fileName: imageFileName,
-                    fileUrl: fileUrl,
-                    mimetype: imageToUpload.mimetype
-                });
-                return;
 
-            });
+    //             // Delete the old profile picture if it exists
+    //             // Delete the old profile pic if it exists
+    //             // if (user.profilePic && user.profilePic.length > 0) {
+    //             //     const oldUrl = user.profilePic[0];
+    //             //     // Extract the path after the container name
+    //             //     const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
+    //             //     const oldBlobPath = oldUrl.startsWith(urlPrefix)
+    //             //         ? oldUrl.slice(urlPrefix.length)
+    //             //         : ""; // fallback if URL is somehow wrong
 
-            req.pipe(bb);
-        } catch (error) {
-            console.error("Error in uploadProfilePicture:", error);
-            res.status(500).json({ message: "Internal Server Error" });
-            return;
-        }
-    }
+    //             //     if (!oldBlobPath) {
+    //             //         console.error("Invalid old profilePic URL format");
+    //             //     } else {
+    //             //         const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
+    //             //         try {
+    //             //             const deleteResponse = await oldBlobClient.deleteIfExists();
+    //             //             if (deleteResponse.succeeded) {
+    //             //                 console.log("Old profile picture deleted successfully");
+    //             //             } else {
+    //             //                 console.log("Old picture not found or already deleted");
+    //             //             }
+    //             //         } catch (err) {
+    //             //             console.error("Error deleting old profile picture:", err);
+    //             //         }
+    //             //     }
+    //             // }
+
+
+    //             // Update user record
+    //             user.profilePic = [fileUrl];
+    //             console.log("user profile pic is", user.profilePic)
+    //             await user.save();
+
+    //             // Cleanup temp file
+    //             fs.unlink(imageToUpload.filePath, (err) => {
+    //                 if (err) console.error("Error deleting local file:", err);
+    //                 else console.log("Local temp file deleted");
+    //             });
+
+    //             res.status(200).json({
+    //                 message: "File uploaded successfully",
+    //                 fileName: imageFileName,
+    //                 fileUrl: fileUrl,
+    //                 mimetype: imageToUpload.mimetype
+    //             });
+    //             return;
+
+    //         });
+
+    //         req.pipe(bb);
+    //     } catch (error) {
+    //         console.error("Error in uploadProfilePicture:", error);
+    //         res.status(500).json({ message: "Internal Server Error" });
+    //         return;
+    //     }
+    // }
 
 
 
@@ -857,7 +879,116 @@ class UserController {
     //         res.status(500).json({ error: 'Internal server error' });
     //         return;
     //     }
-    // }
+    // }.
+
+    static async uploadProfilePicture(req: Request, res: Response) {
+        try {
+            const userId = (req as any).user?.id;
+            if (!userId) {
+                res.status(400).json({ message: "Invalid userId" });
+                return;
+            }
+
+            const user = await User.findById(userId);
+            if (!user) {
+                res.status(404).json({ message: "User not found" });
+                return;
+            }
+
+            const bb = busboy({ headers: req.headers });
+            let imageFileName = "";
+            let imageToUpload: { filePath?: string; mimetype?: string } = {};
+
+            bb.on("file", (_fieldname: string, file: NodeJS.ReadableStream, filename: string | { filename: string }, _encoding: string, fileMimeType: string) => {
+                const safeFilename = typeof filename === "string" ? filename : filename?.filename;
+                const extension = path.extname(safeFilename);
+                if (![".jpg", ".jpeg", ".png", ".heic"].includes(extension)) {
+                    res.status(400).json({ message: "Invalid file type. Only .jpg, .jpeg, .png, and .heic are allowed." });
+                    return;
+                }
+
+                const uniqueFileName = `${Date.now() / 1000}${extension}`;
+                imageFileName = uniqueFileName;
+                const filePath = path.join(__dirname, "..", "TempUploads", uniqueFileName);
+                imageToUpload = { filePath, mimetype: fileMimeType };
+                file.pipe(fs.createWriteStream(filePath));
+            });
+
+            bb.on("finish", async () => {
+                if (!imageFileName || !imageToUpload.filePath) {
+                    res.status(400).json({ message: "No file uploaded" });
+                    return;
+                }
+
+                const blobServiceClient = BlobServiceClient.fromConnectionString(CONTAINER_CONNECTION_STRING);
+                const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+                const blobName = `${DIRECTORY}/${imageFileName}`;
+                const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+                await blockBlobClient.uploadFile(imageToUpload.filePath, {
+                    blobHTTPHeaders: {
+                        blobContentType: imageToUpload.mimetype || "application/octet-stream"
+                    }
+                });
+
+                const fileUrl = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/${blobName}`;
+                console.log("File uploaded successfully:", fileUrl);
+
+                const filename = fileUrl.split('/').pop();
+                console.log("filename is ", filename);
+                console.log(`complete name is ${DIRECTORY}/${filename}`);
+
+                // ✅ Delete old profile picture from blob storage if it exists
+                if (user.profilePic && user.profilePic.length > 0) {
+                    try {
+                        const oldUrl = user.profilePic[0];
+                        const urlPrefix = `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/`;
+
+                        if (!oldUrl.startsWith(urlPrefix)) {
+                            console.warn("Old profilePic URL does not match expected prefix, skipping delete");
+                        } else {
+                            const oldBlobPath = oldUrl.substring(urlPrefix.length);
+                            const oldBlobClient = containerClient.getBlockBlobClient(oldBlobPath);
+                            console.log("Attempting to delete old blob:", oldBlobPath);
+                            const deleteResult = await oldBlobClient.deleteIfExists();
+
+                            if (deleteResult.succeeded) {
+                                console.log("Old profile picture deleted successfully");
+                            } else {
+                                console.log("Old picture not found or already deleted");
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Error during old image deletion:", err);
+                    }
+                }
+
+                // ✅ Update user document
+                user.profilePic = [fileUrl];
+                console.log("user profile pic is", user.profilePic);
+                await user.save();
+
+                // ✅ Clean up local temp file
+                fs.unlink(imageToUpload.filePath, (err) => {
+                    if (err) console.error("Error deleting local file:", err);
+                    else console.log("Local temp file deleted");
+                });
+
+                res.status(200).json({
+                    message: "File uploaded successfully",
+                    fileName: imageFileName,
+                    fileUrl: fileUrl,
+                    mimetype: imageToUpload.mimetype
+                });
+            });
+
+            req.pipe(bb);
+        } catch (error) {
+            console.error("Error in uploadProfilePicture:", error);
+            res.status(500).json({ message: "Internal Server Error" });
+        }
+    }
+
 
     static async homepage(req: Request, res: Response) {
         try {
