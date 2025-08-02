@@ -71,4 +71,4 @@ const sendEmail = async (to: string, subject: string, html: string) => {
 // export default sendEmail;
 export { sendEmail, generateOtpEmailTemplate };
 
-sendEmail("ansinghch@gmail.com", "test", "test")
+// sendEmail("ansinghch@gmail.com", "test", "test")

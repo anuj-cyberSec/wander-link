@@ -22,7 +22,7 @@ const chatHandler = (socket, io) => {
     // socket.on('send-message', ({roomId, message}: {roomId: string; message: string}) => {
     //     io.to(roomId).emit('receive-message', { message, sender: socket.id });
     // });
-    socket.on('send-message', ({ roomId, message }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on('send-message', (_a) => __awaiter(void 0, [_a], void 0, function* ({ roomId, message }) {
         // also save the message to the database
         console.log("roomid , message are ", roomId, message);
         if (!roomId || !message) {
