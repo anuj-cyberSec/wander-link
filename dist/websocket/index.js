@@ -13,9 +13,9 @@ const secret = process.env.JWT_SECRET;
 const server = (httpServer) => {
     const io = new socket_io_1.Server(httpServer, {
         cors: {
-            origin: '*', // Allow all origins
-            methods: ['GET', 'POST'], // Allowed HTTP methods
-            allowedHeaders: ['Content-Type'], // Allowed headers
+            origin: '*',
+            methods: ['GET', 'POST'],
+            allowedHeaders: ['Content-Type'],
             credentials: true, // Allow credentials
         }
     });

@@ -47,7 +47,7 @@ const sendEmail = (to, subject, html) => __awaiter(void 0, void 0, void 0, funct
     try {
         const emailClient = new communication_email_1.EmailClient(connectionString);
         const emailMessage = {
-            senderAddress: 'donotreply@wanderconnect.in', // Replace with your verified sender
+            senderAddress: 'donotreply@wanderconnect.in',
             content: {
                 subject: subject,
                 html: html
