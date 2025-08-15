@@ -1098,7 +1098,7 @@ class UserController {
                 return;
             }
 
-            res.status(200).json(trips);
+            res.status(200).json({userid: userId,trips:trips});
             return;
         } catch (error) {
             console.error("Homepage error:", error);
